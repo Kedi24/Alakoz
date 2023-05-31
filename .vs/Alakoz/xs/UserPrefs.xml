@@ -1,0 +1,34 @@
+﻿<Properties StartupConfiguration="{0AF1EC51-1469-4A0A-85A1-B3CC205DF9C4}|Default" GitUserInfo="UsingGIT">
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Species/Player.cs">
+    <Files>
+      <File FileName="app.manifest" Line="44" Column="1" IsPinned="True" />
+      <File FileName="Game1.cs" Line="1" Column="1" />
+      <File FileName="Animation/Animation.cs" Line="2" Column="17" />
+      <File FileName="Input/Controls.cs" Line="2" Column="17" />
+      <File FileName="Species/Character.cs" Line="1" Column="1" />
+      <File FileName="Species/Enemy.cs" Line="1" Column="1" />
+      <File FileName="Species/Friendly.cs" Line="1" Column="1" />
+      <File FileName="Species/iNPC.cs" Line="1" Column="1" />
+      <File FileName="Species/Player.cs" Line="12" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="Alakoz" expanded="True">
+            <Node name="Alakoz" expanded="True">
+              <Node name="Animation" expanded="True" />
+              <Node name="Input" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.Alakoz PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+</Properties>
