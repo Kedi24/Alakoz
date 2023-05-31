@@ -1,9 +1,9 @@
 ﻿using System;
 namespace Alakoz.Species
 {
-	public class iNPC
+	public class NPC
 	{
-		public iNPC()
+		public NPC()
 		{
 		}
 	}
