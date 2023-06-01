@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/kedidiaba/Projects/AlakozLOCAL/Alakoz.csproj": {}
+    "c:\\Users\\Snapf\\Alakoz\\Alakoz.csproj": {}
   },
   "projects": {
-    "/Users/kedidiaba/Projects/AlakozLOCAL/Alakoz.csproj": {
+    "c:\\Users\\Snapf\\Alakoz\\Alakoz.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/kedidiaba/Projects/AlakozLOCAL/Alakoz.csproj",
+        "projectUniqueName": "c:\\Users\\Snapf\\Alakoz\\Alakoz.csproj",
         "projectName": "Alakoz",
-        "projectPath": "/Users/kedidiaba/Projects/AlakozLOCAL/Alakoz.csproj",
-        "packagesPath": "/Users/kedidiaba/.nuget/packages/",
-        "outputPath": "/Users/kedidiaba/Projects/AlakozLOCAL/obj/",
+        "projectPath": "c:\\Users\\Snapf\\Alakoz\\Alakoz.csproj",
+        "packagesPath": "C:\\Users\\Snapf\\.nuget\\packages\\",
+        "outputPath": "c:\\Users\\Snapf\\Alakoz\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/kedidiaba/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Snapf\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net6.0"
@@ -58,12 +58,30 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[6.0.16, 6.0.16]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.win-x64",
+              "version": "[6.0.16, 6.0.16]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[6.0.16, 6.0.16]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[6.0.16, 6.0.16]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.203/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.203\\RuntimeIdentifierGraph.json"
         }
       }
     }
