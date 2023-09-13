@@ -23,28 +23,20 @@ namespace Alakoz.Collision
     // to name a few.
     
     public class Hurtbox : CollisionObject{
-        public Vector2 position {get {return owner.position;} set{;}}
-        
         public Vector2 origin;
-
         public Vector2 scale {get; set;}
 
-        public float left {get {return owner.position.X;} set{;}}
-
-        public float right {get {return owner.position.X + width;} set{;}}
-
-        public float top {get {return position.Y;} set{;}}
+        public float left {get {return getPosition().X;} set{;}}
+        public float right {get {return getPosition().X + width;} set{;}}
+        public float top {get {return getPosition().Y;} set{;}}  
+        public float bottom {get {return getPosition().Y + height;} set{;}}
+ 
+        public CollisionShape nextBounds {get {return new CollisionShape(owner.nextPosition.X, owner.nextPosition.Y, width, height);} set{;}}
         
-        public float bottom {get {return position.Y + height;} set{;}}
+        public bool hurtboxVisual {get; set;}
         
-        public float width {get; set;}
-        
-        public float height {get; set;}
-
         public Animation sprite;
-
         public AnimationManager spriteManager;
-
         public Player owner; // The entity that owns this hurtbox
     
         public Hurtbox(Player newOwner, Vector2 newPosition, float newWidth, float newHeight)
@@ -58,158 +50,164 @@ namespace Alakoz.Collision
 
             type = HURTBOX;
             owner = newOwner;
+            currBounds = new CollisionShape(left, top, width, height);
+        }
+        public Hurtbox(Player newOwner, Vector2 newPosition, float newWidth, float newHeight, bool visual) :this(newOwner, newPosition, newWidth, newHeight)
+        { 
+            hurtboxVisual = visual;
         }
 
         // Constructor Overload, this is so that hurtbox sprites can be visualized 
-        public Hurtbox(Player newOwner, Vector2 newPosition, float newWidth, float newHeight, Animation hurtboxSprite) :this(newOwner, newPosition, newWidth, newHeight)
+        public Hurtbox(Player newOwner, Vector2 newPosition, float newWidth, float newHeight, Animation hurtboxSprite, bool visual) :this(newOwner, newPosition, newWidth, newHeight)
         { 
             sprite = hurtboxSprite;
-            spriteManager = new AnimationManager(hurtboxSprite, true); // Setting up hitbox visualization
-            
+            spriteManager = new AnimationManager(hurtboxSprite, false); // Setting up hitbox visualization
             scale = new Vector2((newWidth / sprite.frameWidth), (newHeight / sprite.frameHeight));
+            hurtboxVisual = visual;
         }
 
-        public void update_Position(Vector2 updatedPosition)
-        {
-            position = updatedPosition;
-        }
+        // ========================================================== GENERAL ==========================================================       
+        public override Vector2 getPosition() { return owner.currPosition; }
+        public Vector2 getNextPosition() { return owner.nextPosition; }
+        public override CollisionShape getBounds() { return new CollisionShape(getPosition().X, getPosition().Y, width, height); }
+        public CollisionShape getNextBounds() {return new CollisionShape(getNextPosition().X, getNextPosition().Y, width, height); }
+        public void update_Position(Vector2 updatedPosition) { position = updatedPosition; }
+        public override void OnCollision(CollisionObject currObject)  { base.OnCollision(currObject); }
 
-        public override void OnCollision(CollisionObject currObject)
-        {
-            // Call the parent version to reduce redundant code
-            base.OnCollision(currObject);
-        }
-
+        // ========================================================== UPDATING & DRAWING ==========================================================
         public void Update(GameTime gameTime)
         {
-            spriteManager.Update(gameTime);
+            update_Position(owner.position);
+            if (hurtboxVisual) spriteManager.Update(gameTime);
         }
 
         public void Draw(GameTime gameTime, SpriteBatch spriteBatch, Vector2 position, SpriteEffects spriteEffects)
         {
-            spriteManager.Draw(gameTime, spriteBatch, position, scale, spriteEffects);
+            if (hurtboxVisual) spriteManager.Draw(gameTime, spriteBatch, position, scale, spriteEffects);
         }
 
-        
-        // --------------------------------------------------- COLLISION CODE ---------------------------------------------------
+        // ========================================================== COLLISION CODE ==========================================================
 
+        // --------------------------------------------------------- Hurtbox
         public override void hurtboxCollision(Hurtbox currObject)
         {
         }
 
-        // ------------- Hurtbox - Hitbox collision
+        // --------------------------------------------------------- Hitbox 
         public override void hitboxCollision(Hitbox currObject)
-        {
-            // Hurtbox - Hitbox collision goes here. Speciically what happens to the hurtbox
+        {   
+            bool intersecting = getNextBounds().isIntersecting(currObject.getBounds());
+
+            float heightOffset = currObject.top - height;
+
+            if (intersecting && currObject.active)
+            {
+                // Handle the collision
+                if (!currObject.isColliding(this) && !currObject.isIgnore(this)) // To prevent hitting multiple times
+                {
+                    owner.health -= currObject.damage;
+                    owner.hit = true;
+                    owner.KB = currObject.knockback;
+                    owner.applyKB = true;
+                    owner.hitstun = currObject.hitstun;
+                    // Console.WriteLine(currObject.hitstun);
+                    // Console.WriteLine(currObject.knockback);
+
+                    currObject.append(this);
+                }
+            }
+            
+            if (owner.hitstun == 0 && currObject.isColliding(this))
+            {
+                    currObject.remove(this);
+            }
         }
         
-        // ------------- Hurtbox - Ground collision
+        // --------------------------------------------------------- Ground 
         public override void groundCollision(Ground currObject) 
         {
-            // Positions useful for dealing with edge cases. where the player intersects on a corner, equal amounts on the x and y axis
-            float oLeft = currObject.left;
-            float oRight = currObject.right;
-            float oTop = currObject.top;
-            float oBottom = currObject.bottom; 
+            // Intersections depending on the side
+            bool leftintersection = getNextBounds().leftIntersection(currObject.getBounds());
+            bool rightintersection = getNextBounds().rightIntersection(currObject.getBounds());
+            bool topintersection = getNextBounds().topIntersection(currObject.getBounds());
+            bool bottomintersection = getNextBounds().bottomIntersection(currObject.getBounds());
 
-            float heightOffset = oTop - height;
-
-            // Positions of the next position based on velocity, acceleration and hurtbox size
-            float nextLeft = owner.nextPosition.X;
-            float nextRight = owner.nextPosition.X + width;
-            float nextTop = owner.nextPosition.Y;
-            float nextBottom = owner.nextPosition.Y + height; 
-            
-            // Boolean values for each type of intersection
-            
-            bool leftIntersection = ( nextRight >= oLeft && nextLeft <=  oLeft &&  nextTop <=  oBottom && nextBottom >=  oTop ); // Player intersects the left of the currObject
-            bool rightIntersection = ( nextLeft <= oRight && nextRight >= oRight && nextTop <=  oBottom && nextBottom >=  oTop ); // Player intersects the right of the currObject
-            bool topIntersection = ( nextBottom >=  oTop && nextTop <=  oTop && nextRight >=  oLeft && nextLeft <= oRight ); // Player intersects the top of the currObject
-            bool bottomIntersection = ( nextTop <=  oBottom && nextBottom >=  oBottom && nextRight >=  oLeft && nextLeft <=  oRight );  // Player intersects the bottom of the currObject
+            float heightOffset = currObject.top - height;
 
             /*
             Note that monogame places (0,0) at the top left of the screen and increases right and downwards 
             */
 
             // ------------- Horizontal Intersections
-            if (leftIntersection) 
+            if (leftintersection) 
             {
-                if ( owner.position.Y > ( heightOffset)) // For intersectionsThis means that the player is approaching form below
+
+                if ( owner.position.Y > heightOffset) // For intersectionsThis means that the player is approaching form below
                 {
-                    owner.position.X =  oLeft - width;
+                    owner.position.X =  currObject.left - width;
                     owner.acceleration = 0;
-                    // Console.WriteLine("Left Intersection...");
                 }
                 
-            } else if (rightIntersection)
+            } else if (rightintersection)
             {
                 // Offset the player horizontally
-                if ( owner.position.Y >  ( heightOffset)) // This means that the player is approaching from above
+                if ( owner.position.Y >  heightOffset) // This means that the player is approaching from above
                 {
-                    owner.position.X =  oRight;
+                    owner.position.X =  currObject.right;
                     owner.acceleration = 0;
-                    // Console.WriteLine("Right Intersection...");
                 }
             };
             
             // --------------- Vertical Intersections
-            if ( topIntersection ) 
+            if ( topintersection ) 
             {   
                 if (owner.position.Y <=  heightOffset) // player approaches from above
                 { 
                     // Offset the player vertically
                     owner.numJumps = 1;
 				    owner.grounded = true;
-				    owner.jumping = false;
+                    
+                    // Modify the acccleration based on whether or not its grounded
+				    owner.acceleration = owner.groundAccel;
+				    owner.speed = owner.groundSpeed;
+				    
+                    owner.jumping = false;
                     owner.velocity.Y = 0;
-                    owner.position.Y =  oTop - height;
+                    owner.position.Y =  currObject.top - height;
                 }
                 // ############################################################# NEED TO FIX BOTTOM COLLISION 
-            } else if ( bottomIntersection )  // Player intersects the bottom of the currObject
+            } else if ( bottomintersection )  // Player intersects the bottom of the currObject
             {
-                if (owner.position.Y > oBottom)
+                if (owner.position.Y > currObject.bottom)
                 {
-                    owner.position.Y = oBottom;
+                    owner.position.Y = currObject.bottom;
                 }
             };
         }
+        
+        // --------------------------------------------------------- Platform
 
         /* Platforms only detect top collision when interacting with a hurtbox */
         public override void platformCollision(Platform currObject)
         {
-            // Positions useful for dealing with edge cases. where the player intersects on a corner, equal amounts on the x and y axis
-            float oLeft = currObject.left;
-            float oRight = currObject.right;
-            float oTop = currObject.top;
-            float oBottom = currObject.bottom; 
-
-            float heightOffset = oTop - height;
-
-            // Positions of the next position based on velocity, acceleration and hurtbox size
-            float nextLeft = owner.nextPosition.X;
-            float nextRight = owner.nextPosition.X + width;
-            float nextTop = owner.nextPosition.Y;
-            float nextBottom = owner.nextPosition.Y + height; 
-            
-            // Boolean values for each type of intersection
-            bool topIntersection = ( nextBottom >=  oTop && nextTop <=  oTop && nextRight >=  oLeft && nextLeft <= oRight ); // Player intersects the top of the currObject
-
-
+            bool topintersection = getNextBounds().topIntersection(currObject.getBounds());
+            float heightOffset = currObject.top - height;
             /*
             Note that monogame places (0,0) at the top left of the screen and increases right and downwards 
             */
-            
+
             // --------------- Vertical Intersections
-            if ( topIntersection ) 
+            if ( topintersection ) 
             {
-                if (owner.position.Y <=  ( heightOffset)){ // player approaches from above
+                if (owner.position.Y <=  heightOffset)// player approaches from above
+                { 
 
                     // Offset the player vertically
                     owner.numJumps = 1;
 				    owner.grounded = true;
 				    owner.jumping = false;
                     owner.velocity.Y = 0;
-                    owner.position.Y =  oTop - height;
+                    owner.position.Y =  currObject.top - height;
                 }
             }
         }

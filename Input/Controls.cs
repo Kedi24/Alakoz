@@ -44,7 +44,7 @@ namespace Alakoz.Input
 
 
 		/// resets the current keyboard configuration to default settings
-		public void reset()
+				public void reset()
 		{
 			// DEFAULT CONTROLS
 			Left = Keys.A;
@@ -54,8 +54,8 @@ namespace Alakoz.Input
             Jump = Keys.W;
             Crouch = Keys.S;
             Dash = Keys.F;
-            Attack = Keys.P;
-            Skill = Keys.I;
+            Attack = Keys.R;
+            Skill = Keys.T;
         }
 
 		public bool isAllUp()
@@ -77,6 +77,18 @@ namespace Alakoz.Input
 			{
 				return true;
 			}	
+		}
+		public void altControls()
+		{
+			Left = Keys.J;
+            Right = Keys.L;
+            Up = Keys.U;
+            Down = Keys.M;
+            Jump = Keys.I;
+            Crouch = Keys.K;
+            Dash = Keys.H;
+            Attack = Keys.Y;
+            Skill = Keys.G;
 		}
     }
 }

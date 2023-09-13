@@ -23,7 +23,6 @@ namespace Alakoz.Collision
     // to name a few.
     
     public class Ground : CollisionObject{
-        public Vector2 position = new Vector2(0f, 0f);
         
         public Vector2 origin;
 
@@ -34,11 +33,6 @@ namespace Alakoz.Collision
         public float top {get {return position.Y;} set{}}
         
         public float bottom {get {return position.Y + height;} set{}}
-        
-        public float width {get; set;}
-        
-        public float height {get; set;}
-
 
         public Texture2D sprite;
     

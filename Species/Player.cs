@@ -14,7 +14,6 @@ using TiledCS;
 namespace Alakoz.Species
 {
 	public class Player
-
 	{
 		// ------ OTHER ------ //
 		public string stateMSG = "";
@@ -33,38 +32,59 @@ namespace Alakoz.Species
 		public Vector2 currPosition;
 		public Vector2 nextPosition;
 
-		public float acceleration;
-		public float gravity;
-		public float friction;
+		public float gravity = 0.4f;
+		public float speed = 2f; // Default speed
+		public float airSpeed = 1f;
+		public float fallSpeed = 1f;
+		public float groundSpeed = 1f;
+		public float velocityMax = 3f;
+		public float terminalVelocity = 10f;
 		public float accelMax = 10f;
 		public float accelMin = 0.1f;
-
-		public float gravityMax = 2f;
-		public float gravityMin = 0;
+		public float acceleration = 0.2f; // Default acceleration
+		public float deceleration = 0.2f; // Default deceleration
+		public float airAccel = 0.2f;
+		public float airDecel = 0.2f;
+		public float groundAccel = 0.3f;
+		public float groundDecel = 0.1f;
 
 		public int direction = 1;
 		public int numJumps = 1;
+		public bool move_left = false;
+		public bool move_right = false;
 		public bool jumping = false;
-		public bool grounded = false;
-		
 		public bool dashing = false;
-		public Vector2 dashPosition = new Vector2(0f, 0f);
-		public Vector2 dashVelocity = new Vector2(0f, 0f);
-		public float dashAcceleration = 1;
+		public bool attacking = false;
+		public bool crouching = false;
+
+		public bool grounded = false;
+		public bool hit = false;
+
+		public int numDashes = 1;
+		public int dashCooldown = 30;
+		public int hitstun = 0;
+		public int health = 100;
 
 		// ------ COLLISION ------ //
+		public List<CollisionObject> activeCollisions = new List<CollisionObject>();
 		
 		public Hurtbox hurtbox {get; set;}
+		public Hitbox hitbox {get; set;}
+		public Hitbox hitbox2 {get; set;}
+		public Hitbox hitbox3 {get; set;}
+		public Vector2 hitboxPosition = new Vector2(32f, 15f); // For the players attack, will change later
+		public Vector2 KB; // The knockback from the hitbox that interescts the player
+		public bool applyKB = false;
 		float hurtboxWidth = 34;
 		float hurtboxHeight = 45;
-		bool hurtboxVisual = true;
+		public bool hurtboxVisual = true;
 		Vector2 spriteCoordinate = new Vector2(-39, -36); // Placement of sprite in relation to the hurtbox. Calculated with aesprite
 
-		public Vector2 hurtboxOffset;
 
 		// ------ ANIMATION ------ //
 		public Dictionary<string, Animation> animDictionary;
 		public AnimationManager animManager;
+		public string currentAnimation;
 
 		// ------ SKILLS ------ //
 
@@ -88,517 +108,623 @@ namespace Alakoz.Species
 
 		public const string JUMP = "jump";
 		public const string AIR = "air";
-		public const string JUMPSQUAT = "jumpsquat";
-		public const string LAND = "land";
 
 		public const string RUN = "run";
-		public const string RUN_START = "run_start";
 		public const string RUN_END = "run_end";
 		public const string TURNAROUND = "turnaround";
 		
 		public const string CROUCH = "crouch";
-		public const string CROUCH_START = "crouch_start";
-		public const string CROUCH_END = "crouch_end";
 
 		public const string DASH = "dash";
 
 		public const string ATTACK = "attack";
-		public const string ATTACK_START = "attack_start";
-		public const string ATTACK_END = "attack_end";
+
+		public const string HIT = "hit";
 
 		public const string SKILL = "skill";
 
-		public int STATELOCK { get; set; }
-
-		// =========================================== CONSTRUCTORS ============================================
 		public Player(Dictionary<string, Animation> newSprites, Vector2 newPosition)
 		{
-			// Default state
-			currentState = AIR; 
+			currentState = AIR;
+
+			position = newPosition;
+
+			hurtbox = new Hurtbox(this, position, hurtboxWidth, hurtboxHeight, newSprites["Hurtbox"], true);
+			
+			// Hitboxes just to test primitive attacks. Will modify later
+			hitbox = new Hitbox(position + hitboxPosition, 32f, 20f, 3, new Vector2(1f, 0f), 2, 10, newSprites["Hitbox"], true);
+			hitbox2 = new Hitbox(position + hitboxPosition, 32f, 30f, 3, new Vector2(1f, 0f), 5, 10, newSprites["Hitbox"], true);
+			hitbox3= new Hitbox(position + hitboxPosition, 32f, 40f, 3, new Vector2(5f, -5f), 10, 20, newSprites["Hitbox"], true);
+			
+			hitbox.active = false;
+			hitbox2.active = false;
+			hitbox3.active = false;
+			
+			hitbox.addIgnore(hurtbox); // Prevent the player from hitting themselves
+			hitbox2.addIgnore(hurtbox);
+			hitbox3.addIgnore(hurtbox);
+
+			activeCollisions.Add(hurtbox);
+
 			stateFrame = 0;
 			stateTimer = 0f;
 
-			// Default physics
-			position = newPosition ;
-			acceleration = 1f;
-			friction = 1f;
-
-			// Default Collision
-			hurtbox = new Hurtbox(this, position, hurtboxWidth, hurtboxHeight, newSprites["Hurtbox"]);
-
-			// Default Animations
             animDictionary = newSprites;
             animManager = new AnimationManager(newSprites["Base_Idle"], true);
             animManager.Position = position;
-			flip = SpriteEffects.None;
+			currentAnimation = AIR;
 
-			// Default Controls
             controls = new Controls();
 
-
+			flip = SpriteEffects.None;
 		}
-		// =========================================== MOVEMENT FUNCTIONS ============================================
-       private void move()
+
+
+		// ========================================== PHYSICS FUNCTIONS ==========================================
+
+		// Physics functions for each possible movement. These function simply set the velocity values depending
+		// on player input and state
+        private void move()
         {
-            if (direction == 0) velocity.X = -0.5f;
-            else if (direction == 1) velocity.X = 0.5f;
+            if (direction == 0) 
+			{
+				if (velocity.X > -velocityMax) velocity.X -= speed * acceleration;
+				else velocity.X = -velocityMax;
+			}
+            else if (direction == 1) 
+			{
+				if (velocity.X < velocityMax) velocity.X += speed * acceleration;
+				else velocity.X = velocityMax;
+			}
 
-            if (acceleration < accelMax) acceleration += 0.1f;
-            else acceleration = accelMax;
-
-			if (gravity < gravityMax) gravity += 0.1f;
-			else gravity = gravityMax;
-			return;
         }
-
-        private void jump()
+        
+		private void jump()
         {
-            velocity.Y = -6.0f;
-            numJumps = 0;
-            jumping = true;
+			velocity.Y = -8.0f;
+			numJumps -= 1;
+			
+			if (numJumps < 0) numJumps = 0;
 			grounded = false;
-        }
+		}
+		
 		private void fall()
 		{
-			velocity.Y += 0.2f;
-			if (gravity < gravityMax) gravity += 0.1f;
-			else gravity = gravityMax;
-			
+			if (velocity.Y < terminalVelocity) velocity.Y += fallSpeed * gravity;
+			else velocity.Y = terminalVelocity;
 		}
-
+		
+		private void decelerate()
+		{
+			if (!hit)
+			{
+				if (!(move_left || move_right))
+				{
+					if (direction == 0) 
+					{
+						if (velocity.X < 0) velocity.X += speed * deceleration;
+						else velocity.X = 0;
+					}
+					else if (direction == 1) 
+					{
+						if (velocity.X > 0) velocity.X -= speed * deceleration;
+						else velocity.X = 0;
+					}
+				}
+			} else
+			{
+						if (velocity.X < 0) 
+						{
+							velocity.X += speed * deceleration;
+							if (velocity.X > 0 )velocity.X = 0;
+						}
+						else if (velocity.X > 0) 
+						{
+							velocity.X -= speed * deceleration;
+							if (velocity.X < 0 ) velocity.X = 0;
+						}
+						else velocity.X = 0;
+			}
+		}
+		
 		private void dash()
 		{
-			dashing = true; 
-			// dash physics
-			if (direction == 1) velocity.X = 3f;
-			else velocity.X = -3f;
+		// dash physics
+			if (stateFrame >= 0 && stateFrame <= 3)
+			{
+				// Console.WriteLine("StateFrame: " + stateFrame);
+				
+				velocity.X = 0.1f;
+			}
+			else 
+			{
+				if (direction == 1) velocity.X = 6f;
+				else velocity.X = -6f;
+			}
 			velocity.Y = 0f;
-			acceleration = 3f;
-		}
 
-		// ============================================= WIP FUNCTIONS (they are usable but they will change) =============================================
-		// Useful for getting the next position without setting the state.
-		public void get_Input()
+			acceleration = accelMin;
+
+            numDashes = 0;
+			grounded = false;
+		}		
+		
+		private void knockback()
 		{
-			// Horiziontal movement
-			if (controls.isDown(controls.Right)) 
+			velocity.X = KB.X;
+			velocity.Y = KB.Y;
+			applyKB = false;
+		} 
+		// ------------------------------ Attacks
+		private void groundAttack()
+		{	
+			if (stateFrame == 6)
 			{
-				direction = 1;
-				move();
+				hitbox.active = true;
+				activeCollisions.Add(hitbox); // Add collision to the list of collisions to check
 			}
-			else if (controls.isDown(controls.Left) )
+			else if (stateFrame == 8)
 			{
-				direction = 0;
-				move();
+				hitbox.active = false;
+				activeCollisions.Remove(hitbox); // Attack has ended
 			}
-
-			// Jump
-			if (controls.isDown(controls.Jump) && numJumps > 0) jump();
-
-			// Dash
-			if (controls.isDown(controls.Dash)) dash();
-			
-			// No inputs
-			if (controls.isAllUp()) 
+			else if (stateFrame == 10)
 			{
-				if (acceleration > accelMin) acceleration -= 0.1f;
-            	else acceleration = accelMin;
+
+				hitbox2.active = true;
+				activeCollisions.Add(hitbox2); // Add collision to the list of collisions to check
 			}
-
-			// if (Keyboard.GetState().IsKeyDown(Keys.Q)) hurtboxVisual = true;
-			// else hurtboxVisual = false;
-
-			fall();
-			setPositions();
-		}
-
-		// Sets the current and previous position AFTER player input but BEFORE collision handling.
-		public void setPositions()
-		{
-			currPosition = position;
-            nextPosition.X = position.X + (velocity.X * acceleration);
-            nextPosition.Y = position.Y + (velocity.Y * gravity);
-
-		}
-
-		// ============================================= STATE FUNCTIONS =============================================
-        // ---------------------------------------- Idle States
-		public void idle_state()
-		{
-			
-			if (!grounded) 
+			else if (stateFrame == 12)
 			{
+				hitbox2.active = false;
+				activeCollisions.Remove(hitbox2); // Attack has ended
+				
+			}
+			else if (stateFrame == 17)
+			{
+
+				hitbox3.active = true;
+				activeCollisions.Add(hitbox3); // Add collision to the list of collisions to check
+			}
+			else if (stateFrame == 20)
+			{
+				hitbox3.active = false;
+				activeCollisions.Remove(hitbox3); // Attack has ended
+			}
+			else if (stateFrame == 25) 
+			{
+				attacking = false;
 				set_state(AIR);
 				air_state();
-				return;
 			}
-
-			if (controls.isDown(controls.Left) ) // Left & Right inputs 
+			
+		}
+		private void airAttack()
+		{
+			if (stateFrame == 11)
 			{
-				direction = 0;
-				set_state(RUN);
-				run_state();
+				hitbox3.active = true;
+				activeCollisions.Add(hitbox3); // Add collision to the list of collisions to check
 			}
-			else if ( controls.isDown(controls.Right) )
+			else if (stateFrame == 16)
 			{
-				direction = 1;
-				set_state(RUN);
-				run_state();
+				hitbox3.active = false;
+				activeCollisions.Remove(hitbox3); // Attack has ended
+			}	
+			else if (stateFrame == 22) 
+			{
+				attacking = false;
+				set_state(AIR);
+				air_state();
 			}
-
-			// else if (controls.isDown(controls.Crouch)) // Crouch Input
-			// {
-			// 	set_state(CROUCH);
-			// 	crouch_state();
-			// }
-			else if (controls.isDown(controls.Jump) && numJumps > 0 && !jumping) // Jump Input
+			
+		}
+		private void dashAttack()
+		{
+			if (stateFrame == 11)
 			{
-				
-				STATELOCK = 10;
+				hitbox.active = true;
+				activeCollisions.Add(hitbox); // Add collision to the list of collisions to check
+			}
+			else if (stateFrame == 16)
+			{
+				hitbox.active = false;
+				activeCollisions.Remove(hitbox); // Attack has ended
+			}	
+			else if (stateFrame == 22) 
+			{
+				attacking = false;
+				set_state(AIR);
+				air_state();
+			}
+			
+		}
+		private void crouchAttack()
+		{
+			if (stateFrame == 11)
+			{
+				hitbox.active = true;
+				activeCollisions.Add(hitbox); // Add collision to the list of collisions to check
+			}
+			else if (stateFrame == 16)
+			{
+				hitbox.active = false;
+				activeCollisions.Remove(hitbox); // Attack has ended
+			}	
+			else if (stateFrame == 22) 
+			{
+				attacking = false;
+				set_state(AIR);
+				air_state();
+			}
+			
+		}
+		
+		
+		// ========================================== STATE FUNCTIONS ==========================================
+		
+		// All the state functions for the player depending on player input and player state
+		// These functions contain what to do when in a certain state and when to do it
+		public void air_state()
+		{
+			if (grounded)
+			{
+				set_state(IDLE);
+				velocity.Y = 0;
+				idle_state();
+			}
+			else if (jumping) 
+			{
 				set_state(JUMP);
 				jump_state();
-				
 			}
-			else if (controls.isDown(controls.Dash)) // Dash Input
+			else if (dashing) 
 			{
-				STATELOCK = 6;
 				set_state(DASH);
 				dash_state();
 			}
-			else if (controls.isDown(controls.Attack)) // Attack Input
+			else if (attacking)
 			{
 				set_state(ATTACK);
 				attack_state();
 			}
-			else 
+			else
 			{
-				if (acceleration > accelMin) acceleration -= 0.5f;
-				else
+				if (move_left) 
 				{
-					velocity.X = 0;
-					acceleration = accelMin;
+					direction = 0;
+					move();
 				}
-				velocity.Y = 0;
+				else if (move_right)
+				{
+					direction = 1;
+					move();
+				}
 			}
+			
 		}
-
-		/* 
-		General state while airborne with no inputs
-		*/
-		public void air_state()
+		
+		public void idle_state()
 		{
-			if (grounded) 
+			if (!grounded)
 			{
-				set_state(IDLE);
-				idle_state();
-				return;
+				set_state(AIR);
+				air_state();
 			}
-			if (controls.isDown(controls.Dash))
+			else if (jumping) 
 			{
-				STATELOCK = 6;
-				set_state(DASH);
-				dash_state();
-				return;
-			}
-			if (jumping)
-			{
-				STATELOCK = animDictionary["Base_Jump"].totalFrames - 1;
+				grounded = false;
 				set_state(JUMP);
 				jump_state();
-				return;
 			}
-
-            if (controls.isDown(controls.Left)) // Horizontal Movement
+			else if (move_left) 
 			{
 				direction = 0;
+				set_state(RUN);
+				move();
 			}
-			else if (controls.isDown(controls.Right))
+			else if (move_right)
 			{
 				direction = 1;
+				set_state(RUN);
+				move();
 			}
-        }
-
-		// -------------------- Jump States
-		/*
-		State during a jump
-		*/
+			else if (dashing) 
+			{
+				set_state(DASH);
+				dash_state();
+			}
+			else if (attacking)
+			{
+				set_state(ATTACK);
+				attack_state();
+			}
+		}
+		
 		public void jump_state()
-		{
-			if (STATELOCK == stateFrame)
+		{	
+			if (stateFrame == 9)
 			{
 				jumping = false;
 				set_state(AIR);
 				air_state();
 				return;
 			}
-			if (controls.isDown(controls.Dash))
+			else if (grounded)
 			{
-
+				jumping = false;
+				velocity.Y = 0;
+				set_state(IDLE);
+				idle_state();
 			}
-            else if (controls.isDown(controls.Left)) // Horizontal Movement
-            {
-                direction = 0;
-            }
-            else if (controls.isDown(controls.Right))
-            {
-                direction = 1;
-            }
-        }
-
-        /*
-		State when starting a jump 
-		*/
-		public void jumpsquat_state()
-		{
-           
-        }   
-
-		/* 
-		State when landing
-		*/
-        public void land_state()
-		{
-
+			else if (dashing) 
+			{
+				jumping = false;
+				set_state(DASH);
+				dash_state();
+			} 
+			else if (attacking)
+			{
+				set_state(ATTACK);
+				attack_state();
+			}
+			else 
+			{
+				if (move_left || move_right) move();
+				if (stateFrame == 0) jump();
+			}
 		}
-
-		// -------------------- Run States
-		/* 
-		State during a run
-		*/
+		
 		public void run_state()
 		{
-    
-			if (!grounded) 
+			currentAnimation = RUN;
+			if (!grounded)
 			{
-				set_state(AIR); 
-				air_state(); 
-				return;
+				set_state(AIR);
+				air_state();
 			}
-
-			if (controls.isDown(controls.Crouch)) // Crouch Input
+			else if (jumping) 
 			{
-				set_state(CROUCH);
-				crouch_state();
+				grounded = false;
+				set_state(JUMP);
+				jump_state();
 			}
-			else if (controls.isDown(controls.Jump)) // Jump Input
-			{
-				if (jumping)
-				{
-					Console.WriteLine("Executing Jump...");
-					STATELOCK = animDictionary["Base_Jump"].totalFrames - 1;
-					set_state(JUMP);
-					jump_state();
-				}
-			}
-			else if (controls.isDown(controls.Dash)) // Dash Input
+			else if (dashing) 
 			{
 				set_state(DASH);
 				dash_state();
 			}
-
-			else if (direction == 1) // Travelling Right
+			else if (attacking)
 			{
-				if (controls.isDown(controls.Left) && controls.isDown(controls.Right))
+				set_state(ATTACK);
+				attack_state();
+			} 
+			else
+			{
+				if (!(move_left || move_right))
 				{
-					set_state(TURNAROUND);
-					turnaround_state();
+					currentAnimation = RUN_END;
+					if (animManager.isDone) 
+					{
+						currentAnimation = IDLE;
+						set_state(IDLE);
+						idle_state();
+					}
+					return;
+				} else if (move_left) 
+				{
+					direction = 0;
+					move();
 				}
-				else if (controls.isDown(controls.Right))
+				else if (move_right)
 				{
-				}
-				else // No Inputs
-				{
-					set_state(IDLE);
-					idle_state();
-					// For the runEnd_state when its fixed
-					// set_state(RUN_END);
-					// STATELOCK = animDictionary["Base_RunStop"].totalFrames - 1;
-					// runEnd_state();
+					direction = 1;
+					move();
 				}
 			}
-			else if (direction == 0) // Travelling Left
-			{
-				if (controls.isDown(controls.Left) && controls.isDown(controls.Right))
-				{
-					set_state(TURNAROUND);
-					turnaround_state();
-				}
-				else if (controls.isDown(controls.Left))
-				{
-
-				}
-				else // No inputs
-				{
-					set_state(IDLE);
-					idle_state();
-					// For the runEnd_state when its fixed
-					// set_state(RUN_END);
-					// STATELOCK = animDictionary["Base_RunStop"].totalFrames - 1;
-					// runEnd_state();
-				}
-			}
-        }
-
-		/*
-		State when starting a run
-		*/
-		public void runStart_state()
-		{
-
 		}
-
-
-		/* 
-		State when a run ends
-		*/
-		public void runEnd_state()
-		{
-			
-        }
-
-
-		/*
-		State when changing directions during a run
-		*/
-		public void turnaround_state()
-		{
-			
-        }
-
-		// -------------------- Crouch States
-
-		/* 
-		State during a crouch
-		*/
-		public void crouch_state()
-		{
-			
-		}
-
-
-		/* 
-		State when starting a crouch
-		*/
-		public void crouchStart_state()
-		{
-
-		}
-
-		/* 
-		State when ending a crouch
-		*/
-		public void crouchEnd_state()
-		{
-
-		}
-
-
-		// -------------------- Other
-
-		/* 
-		State during a dash
-		*/
+		
 		public void dash_state()
 		{
-			if (stateFrame == STATELOCK)
+			if (stateFrame == 10) // State ends
 			{
-				velocity.Y = dashVelocity.Y;
-				acceleration = dashAcceleration;
+				dashing = false;
+				dashCooldown = 30;
 
-				set_state(previousState);
-				STATELOCK = 0;
+				set_state(AIR);
+				air_state();
+				return;
 			}
-			else {
-				if (stateFrame <= 1) // storing the physics values prior to dash
-				{
-					dashPosition = position; // might not need
-					
-					dashVelocity = velocity;
-					dashAcceleration = acceleration;
-				}
+			else if (jumping)
+			{
+				//cancel the dash input with jump
+				dashing = false;
+				dashCooldown = 15;
+				set_state(JUMP);
+				jump_state();
+			}
+			else if (attacking)
+			{
+				set_state(ATTACK);
+				attack_state();
+			}
+			else // now for the states
+			{
+				dash();
+			}
+
+		}
+		
+		public void hit_state()
+		{
+			if (hitstun == 0) 
+			{
+				hit = false;
+				set_state(AIR);
+				air_state();
+				return;
+			}
+			else
+			{
+				move_left = false;
+				move_right = false;
+				jumping = false;
+				crouching = false;
+				dashing = false;
+
+				if (applyKB) knockback();
 			}
 		}
 
-		// -------------------- Attack States
-
-		/*
-		State during an attack
-		*/
 		public void attack_state()
 		{
-
+			move_left = false;
+			move_right = false;
+			jumping = false;
+			crouching = false;
+			dashing = false;
+			
+			set_attack();
 		}
 
-		/*
-		State during the startup of an attack
-		*/
-		public void attackStart_state()
-		{
-
-		}
-
-
-		/*
-		State during the endlag of an attack
-		*/
-		public void attackEnd_State()
-		{
-
-		}
-
-		// -------------------- Skill States
 		
-		/*
-		State during a sklll
-		*/
-		public void skill_state()
+		// ========================================== SETTING FUNCTIONS ==========================================
+		
+		// Sets the current and previous position AFTER player input but BEFORE collision handling.
+		public void set_positions()
 		{
+			currPosition = position;
+
+			float tempVelocityX = velocity.X + (speed * acceleration);
+			float tempVelocityY = velocity.Y + (speed * gravity);
+
+            nextPosition.X = position.X + tempVelocityX;
+            nextPosition.Y = position.Y + tempVelocityY;
+		}
+
+		// For dealing with attacks. Adds any hitboxes to the lists of collisions and sets any necessary
+		// physics values
+		public void set_attack()
+		{
+			// need to make sure grounded is set to false AFTER this function is called
+			switch (previousState)
+			{
+				case AIR:
+					airAttack();
+					break;
+				case JUMP:
+					airAttack();
+					break;
+				case IDLE:
+					groundAttack();
+					break;
+				case RUN:
+					groundAttack();
+					break;
+				case DASH:
+					dashAttack();
+					break;
+				case CROUCH:
+					crouchAttack();
+					break;
+			}
+		}
+
+		/// Changes the players current state, setting it to <param name="newState"> while recording the previous state.
+		/// Also resets the stateFrame count.
+        public void set_state(string newState)
+        {
+			if (currentState != newState)
+			{
+				previousState = currentState; 
+				stateFrame = 0;
+			}
+            currentState = newState;
+			currentAnimation = currentState; // Set the current animation to play
+        }
+		
+		
+		// ========================================== UPDATING ==========================================
+		
+		/// Keeps track of the elasped time of each state in 24FPS
+        public void update_time(GameTime gameTime)
+        {
+            stateTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (stateTimer >= FPS24)
+            {
+                stateTimer = FPS24 - stateTimer;
+                stateFrame++;	
+				update_cooldowns();
+            }
+			if (stateFrame >= 240) stateFrame = 0;
+        }
+
+		// Sets the corresponding boolean values depending on player input. Useful for setting the values
+		// without calling the analogous state method
+		public void update_input()
+		{
+			speed = airSpeed;
+			acceleration = airAccel;
+			deceleration = airDecel; 
+
+			// Horizontal movement
+			if (controls.isDown(controls.Right) && controls.isDown(controls.Left)) // dont move when both are pressed
+			{
+				move_right = false;
+				move_left = false;
+			}
+			else if (controls.isDown(controls.Right))  // to prevent both from being true at the same time
+			{
+				move_right = true;
+				move_left = false;
+			}
+			else if (controls.isDown(controls.Left) ) 
+			{
+				move_right = false;
+				move_left = true;
+			}
+			else 
+			{
+				move_right = false;
+				move_left = false;
+			}
+
+			// Jump
+			if (controls.isDown(controls.Jump) && numJumps > 0) jumping = true;
+
+			// Crouch
+			if (controls.isDown(controls.Crouch)) crouching = true;
+			else crouching = false;
+
+			// Dash
+			if (controls.isDown(controls.Dash) && numDashes > 0 && dashCooldown == 0) dashing = true;
+
+			// Attack
+			if (controls.isDown(controls.Attack)) attacking = true;
 
 		}
 
-		// =========================================== GENERAL FUNCTIONS ============================================
-		/*
-		Finds the current state of the player based on the users input. 
-		*/
+		// Update the players state, and set the values for the physics to be applied
 		public void update_state()
-        {
+		{
+			if (hit) 
+			{
+				set_state(HIT);
+				hit_state();			
+			}
 			switch (currentState)
 			{
-				case IDLE:
-					idle_state();
-					break;
 				case AIR:
 					air_state();
+					break;
+				case IDLE:
+					idle_state();
 					break;
 				case JUMP:
 					jump_state();
 					break;
-				case JUMPSQUAT:
-					jumpsquat_state();
-					break;
-				case LAND:
-					land_state();
-					break;
 				case RUN:
 					run_state();
-					break;
-				case RUN_START:
-					runStart_state();
-					break;
-				case RUN_END:
-					runEnd_state();
-					break;
-				case TURNAROUND:
-					turnaround_state();
-					break;
-				case CROUCH:
-					crouch_state();
-					break;
-				case CROUCH_START:
-					crouchStart_state();
-					break;
-				case CROUCH_END:
-					crouchEnd_state();
 					break;
 				case DASH:
 					dash_state();
@@ -606,39 +732,78 @@ namespace Alakoz.Species
 				case ATTACK:
 					attack_state();
 					break;
-				case ATTACK_START:
-					attackStart_state();
-					break;
-				case ATTACK_END:
-					attackEnd_State();
-					break;
-				default:
-					break;
 			}
-        }
-
-
-		/* 
-		Changes the state of the player and records the previous state
-		*/
-		
-        public void set_state(string newState)
+			grounded = false;
+			decelerate();
+			fall();
+			set_positions(); // Update the "position to be drawn" of the player
+		}
+	
+		// Applies physics to the position of the character. Reseting boolean values as necessary. 
+		// This function should NOT set any physics related stuff like acclereation and velocity unless
+		// those values are being reset
+        public void update_physics()
         {
-			if (currentState != newState)
+            // Flipping
+            if (direction == 0) flip = SpriteEffects.FlipHorizontally;
+            else if (direction == 1) flip = SpriteEffects.None;
+
+			if (grounded) 
 			{
-				previousState = currentState;
-				stateFrame = 0;
+				numJumps = 1;
+				velocity.Y = 0f;
 			}
-            currentState = newState;
+			if (acceleration < 0) acceleration = 0;
+
+			position.Y += velocity.Y ;
+            position.X += velocity.X ;
+			
+			if (position.Y >= 1000f || health == 0) 
+			{
+				position.Y = 0f;
+				position.X = 400f; 
+				velocity.Y = 0f; 
+				acceleration = 0f;
+				health = 100;
+			}
+
+			if (attacking) hitbox.update_Position(position + hitboxPosition);
+			if (attacking) hitbox2.update_Position(position + hitboxPosition);
+			if (attacking) hitbox3.update_Position(position + hitboxPosition);
+
+			hurtbox.update_Position(position);
         }
 
-		// =========================================== UPDATE ============================================
-		/*
-		Modifies the current animation of the player based on the current state
-		*/
+		// Modify the players cooldowns depending on the time
+		public void update_cooldowns()
+		{
+			// -------- Hitstun
+			if (hit && hitstun > 0) hitstun -= 1;
+			else 
+			{
+				hitstun = 0;
+				hit = false;
+			}
+			// -------- Dash 
+			if (dashCooldown > 0) 
+			{
+				dashCooldown -= 1;
+				dashing = false;
+			}
+			else
+			{
+				dashCooldown = 0;
+			 	numDashes = 1;
+			}
+
+			// -------- Health
+			if (health < 0) health = 0;
+		}
+	
+		// Updating the current animation to be played
 		public void update_animations()
 		{
-            switch (currentState)
+            switch (currentAnimation)
             {
                 case IDLE:
 					animManager.Play(animDictionary["Base_Idle"]);
@@ -649,17 +814,8 @@ namespace Alakoz.Species
 				case JUMP:
 					animManager.Play(animDictionary["Base_Jump"]);
 					break;
-                case JUMPSQUAT:
-                    animManager.Play(animDictionary["ball"]);
-                    break;
-                case LAND:
-                    animManager.Play(animDictionary["ball"]);
-                    break;
                 case RUN:
                     animManager.Play(animDictionary["Base_Running"]);
-                    break;
-                case RUN_START:
-                    animManager.Play(animDictionary["ball"]);
                     break;
                 case RUN_END:
                     animManager.Play(animDictionary["Base_RunStop"]);
@@ -668,13 +824,7 @@ namespace Alakoz.Species
                     animManager.Play(animDictionary["Base_Turnaround"]);
                     break;
                 case CROUCH:
-                    animManager.Play(animDictionary["ball"]);
-                    break;
-                case CROUCH_START:
-                    animManager.Play(animDictionary["ball"]);
-                    break;
-                case CROUCH_END:
-                    animManager.Play(animDictionary["ball"]);
+                    animManager.Play(animDictionary["ball"]); 
                     break;
 				case DASH:
 					animManager.Play(animDictionary["ball"]);
@@ -682,97 +832,78 @@ namespace Alakoz.Species
                 case ATTACK:
                     animManager.Play(animDictionary["ball"]);
                     break;
-                case ATTACK_START:
-                    animManager.Play(animDictionary["ball"]);
-                    break;
-                case ATTACK_END:
-                    animManager.Play(animDictionary["ball"]);
-                    break;
+				case HIT:
+					animManager.Play(animDictionary["ball"]); 
+					break;
                 default:
                     break;
             }
         }
 
-		/*
-		Modifies the postion, velocity and acceleration of the player based on the current state
-		*/
-        private void update_physics()
+		
+
+		// Old function, will modify later
+        public virtual void Update(GameTime gameTime)
         {
-			// Flipping
-            if (direction == 0) flip = SpriteEffects.FlipHorizontally;
-            else if (direction == 1) flip = SpriteEffects.None;
-
-			if (grounded) 
-			{
-				numJumps = 1;
-				gravity = 0;
-				velocity.Y = 0;
-			}
-
-			position.Y += velocity.Y ;
-            position.X += velocity.X * acceleration;
-			
-			if (position.Y >= 1000f) 
-			{
-				position.Y = 0f;
-				position.X = 400f; 
-				velocity.Y = 0f; 
-				acceleration = 0f;
-				gravity = 0f;
-			}
-
-			hurtbox.update_Position(position);		
-        }
-
-
-		/* 
-		 * Keeps track of the elasped time of each state in 24FPS
-		 * 
-		 */
-        private void update_time(GameTime gameTime)
-        {
-            stateTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (stateTimer >= FPS24)
-            {
-                stateTimer = FPS24 - stateTimer;
-                stateFrame++;
-            }
-			if (stateFrame >= 240) stateFrame = 0;
-        }
-
-		public virtual void Update(GameTime gameTime)
-        {
+			// update_test();
 			update_physics(); // set the final position, velocity, and acceleration of the player
-			update_state(); // set the current and previous states
+			hurtbox.Update(gameTime);
 			update_time(gameTime); // update the frame count for the state
 			update_animations(); // set the corresponding animation
 			animManager.Update(gameTime); // update the frame count for the animation
-			
-			if (hurtboxVisual) hurtbox.Update(gameTime);
         }
 
-		// =========================================== UPDATE ============================================
+
+// ========================================== DRAWING ==========================================
 		public void DrawPlayer(GameTime gameTime, SpriteBatch spritebatch)
 		{
-			animManager.Draw(gameTime, spritebatch, position + spriteCoordinate, Vector2.One, flip); // Draw player
+			// Draw player animation
+			animManager.Draw(gameTime, spritebatch, position + spriteCoordinate, Vector2.One, flip); 
 			
-			if (hurtboxVisual) hurtbox.Draw(gameTime, spritebatch, position, flip); // Draw Hurtbox visualization
+			// Draw the players hurtbox, will change later
+			hurtbox.Draw(gameTime, spritebatch, position, flip);
+			
+			// Attack hitboxes just for testing. Will remove/change later
+			hitbox.Draw(gameTime, spritebatch, position + hitboxPosition, flip);
+			hitbox2.Draw(gameTime, spritebatch, position + hitboxPosition, flip);
+			hitbox3.Draw(gameTime, spritebatch, position + hitboxPosition, flip);
 		}
         
-
         public virtual void Draw(GameTime gameTime, SpriteBatch spriteBatch)
 		{
-			// Draw Player
+
+			// Messages to display game / player information
+			stateMSG = "Current State: " + currentState 
+			+ "\nPrevious State: " + previousState
+			+ "\nFrame Time (24FPS): " + stateFrame + " Frames" 
+			+ "\nGrounded: " + grounded.ToString()
+			+ "\nCooldown: " + dashCooldown
+			+ "\nHealth: " + health
+			+ "\nHitstun: " + hitstun;
+			
+			movementMSG = "Position: " + position.ToString() 
+			+ "\nVelocity: " + velocity.ToString()
+            + "\nAcceleration: " + acceleration.ToString() 
+			+ "\nDirection: " + direction.ToString()
+			+ "\nGravity: " + gravity.ToString();
+			
+			string inputMSG = 
+			"Left = " + move_left.ToString() 
+			+ "\nRight = " + move_right.ToString()
+			+ "\nJumping = " + jumping
+			+ "\nDashing = " + dashing
+			+ "\nCrouching = " + crouching
+			+ "\nGrounded = " + grounded
+			+ "\nAttacking = " + attacking
+			+ "\nHit = " + hit
+			+ "\nIgnore Size: " + hitbox.ignoreObjects.Count;
+;
 			DrawPlayer(gameTime, spriteBatch);
 
-			// Frame dispaly
-			stateMSG = "Current State: " + currentState + "\nPrevious State: " + previousState
-				+ "\nTime (24FPS): " + stateFrame + " Frames" + "\nGrounded: " + grounded.ToString();
-			movementMSG = "Position: " + position.ToString() + "\nVelocity: " + velocity.ToString()
-                + "\nAcceleration: " + acceleration.ToString() + "\nDirection: " + direction.ToString();
-
-            spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(550f, 400), Color.DarkRed);
+            spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(800f, 400), Color.DarkRed);
             spriteBatch.DrawString(stateFONT, stateMSG, new Vector2(5f, 415), Color.Gold);
+			spriteBatch.DrawString(stateFONT, inputMSG, new Vector2(5f, 550), Color.Orange);
+
 			
         }
 	}

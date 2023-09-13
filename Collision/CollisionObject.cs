@@ -10,7 +10,6 @@ using Alakoz.Input;
 using Alakoz.Species;
 using Alakoz.Collision;
 
-
 using TiledCS;
 
 namespace Alakoz.Collision
@@ -24,11 +23,15 @@ namespace Alakoz.Collision
     
     public abstract class CollisionObject
     {
-        
+         
+        public Vector2 position;
+
         public bool active;
     
         public string type;
-    
+
+        public CollisionShape currBounds;
+
         public const string HURTBOX = "hurtbox"; // Hurtbox collision type
     
         public const string HITBOX = "hitbox"; // Hitbox collision type
@@ -37,10 +40,11 @@ namespace Alakoz.Collision
 
         public const string PLATFORM = "platform"; 
 
-        public string getType() 
-        {
-            return type;
-        }
+        public string getType() { return type; }
+        public virtual Vector2 getPosition() { return position; }
+        public virtual CollisionShape getBounds() { return new CollisionShape(getPosition().X, getPosition().Y, width, height); }
+        public float width {get; set;}
+        public float height {get; set;}
 
         // Finds the corresponding collision method
         public virtual void OnCollision(CollisionObject currObject) 
@@ -63,7 +67,6 @@ namespace Alakoz.Collision
 
         }
         // --------------------------------------------------- COLLISION CODE ---------------------------------------------------
-
         public abstract void hurtboxCollision(Hurtbox currObject);
 
         public abstract void hitboxCollision(Hitbox currObject);

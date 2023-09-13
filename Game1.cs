@@ -23,8 +23,11 @@ public class Game1 : Game
 
     // ----- PLAYER & BACKGROUND ----- //
     Texture2D Background;
+    Player player1;
     Player player2;
     Dictionary<string, Animation> animations;
+    Vector2 Player1Pos;
+    Vector2 Player2Pos;
     Vector2 SymbolPosition;
     
     // ----- MAP ----- //
@@ -42,39 +45,56 @@ public class Game1 : Game
     // ----- COLLISIONS ----- //
     List<CollisionObject> allCollisionObjects; // All the collisions to be checked
 
-    // ----------------------------------------------------- GAME1 -----------------------------------------------------
+     //============================================= GAME1 =============================================
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
-
-        // Window Size
-        _graphics.PreferredBackBufferWidth = 1080; 
+        _graphics.PreferredBackBufferWidth = 1080;
         _graphics.PreferredBackBufferHeight = 720;
-
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
     }
-
-    // ----------------------------------------------------- INITIALIZE() -----------------------------------------------------
-
-    // Only gets called once when the game loads. Useful for loading certain things
+    // ============================================= INITIALIZING =============================================
     protected override void Initialize()
     {
-        allCollisionObjects = new List<CollisionObject>(); // ALL collision objects to be checked for the current tick
-        animations = new Dictionary<string, Animation>(); // Animations just for the player. Can change later
-        SymbolPosition = new Vector2(400, 0); // Just a placeholder. Delete whenever
+        // TODO: Add your initialization logic here
+
+        this.TargetElapsedTime = TimeSpan.FromSeconds(1d / 60d);
+
+        allCollisionObjects = new List<CollisionObject>();
+        animations = new Dictionary<string, Animation>();
+        SymbolPosition = new Vector2(400, 0);
+        Player1Pos = new Vector2(400, 0);
+        Player2Pos = new Vector2(500, 0);
+        
 
         base.Initialize();
     }
 
-    // ----------------------------------------------------- LOADING -----------------------------------------------------
 
+    // ============================================= LOADING =============================================
+    protected override void LoadContent() // TODO: use this.Content to load your game content here
+    {
+        Console.WriteLine("Loading Content...");
+        _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // Load All character animations, hurtboxes, hitboxes and any other related sprites.
-       protected void LoadCharacter(){
+        Background = Content.Load<Texture2D>("Sky");
+        font = Content.Load<SpriteFont>("TestFont");
+        
+        Console.WriteLine("Loading Map...");
+        LoadMap();
+
+        Console.WriteLine("Loading Character assests...");
+        LoadCharacter();
+
+        Console.WriteLine(" -------------------- LoadContent: OK --------------------");
+    }
+    protected void LoadCharacter(){
         
         Animation Symbol = new Animation(Content.Load<Texture2D>("Base_Animations/ball"), 1);
         Animation playerHurtbox = new Animation(Content.Load<Texture2D>("Base_Animations/Hurtbox"), 1);
+        Animation playerHitbox = new Animation(Content.Load<Texture2D>("Base_Animations/Hitbox"), 1);
+
         Animation idle = new Animation(Content.Load<Texture2D>("Base_Animations/Base_Idle"), 32);
         Animation idle2 = new Animation(Content.Load<Texture2D>("Base_Animations/Base_Idle2"), 8);
         Animation run = new Animation(Content.Load<Texture2D>("Base_Animations/Base_Running"), 22);
@@ -86,8 +106,9 @@ public class Game1 : Game
         //jump.isLooping = false;
         // runStop.isLooping = false;
 
-        animations.Add("ball", Symbol); // Exchange this with the hurtbox sprite
+        animations.Add("ball", Symbol);
         animations.Add("Hurtbox", playerHurtbox);
+        animations.Add("Hitbox", playerHitbox);
         animations.Add("Base_Idle", idle);
         animations.Add("Base_Running", run);
         animations.Add("Base_Turnaround", turnaround);
@@ -95,25 +116,35 @@ public class Game1 : Game
         animations.Add("Base_Jump", jump);
         animations.Add("Base_Falling", falling);
 
-        //player = new Character(animations, SymbolPosition, _graphics.GraphicsDevice);
-        player2 = new Player(animations, SymbolPosition);
+        player1 = new Player(animations, Player1Pos);
+        player2 = new Player(animations, Player2Pos);
 
         // THIS IS FOR THE INFORMATION DISPLAY, MOVE INTO PLAYER CLASS LATER
-        // p = font;
+        player1.stateFONT = font;
+        player1.animManager.frameFont = font;
+        player1.hurtbox.spriteManager.frameFont = font;
+
         player2.stateFONT = font;
         player2.animManager.frameFont = font;
         player2.hurtbox.spriteManager.frameFont = font;
-        allCollisionObjects.Add(player2.hurtbox);
         
         Console.WriteLine("Width: " + idle.frameWidth);
         Console.WriteLine("Height: " + idle.frameHeight);
+
+        // Setup the controls
+        player1.controls.reset();
+        player2.controls.altControls();
     }
 
+    protected void LoadPlayerCollisions()
+    {
+        allCollisionObjects.Add(player1.hurtbox);
+        allCollisionObjects.Add(player2.hurtbox);
+    }
 
-    // Load the texture, tileset, and tilemap of the corresponding level
     protected void LoadMap(){
         
-        // MAP 1 - Uncomment to load it and comment map 2
+        // MAP 1 - Uncomment to load Map 1 and comment map 2
         // tileMap = new TiledMap(Content.RootDirectory + "/TestMaps/TestLevel - 2.tmx");
         // tileSet = new TiledTileset(Content.RootDirectory + "/TestMaps/Desert_Tileset3.tsx");
         // tilesetTexture = Content.Load<Texture2D>("TestMaps/tmw_desert_spacing");
@@ -127,7 +158,7 @@ public class Game1 : Game
 
         allTilesets = tileMap.GetTiledTilesets(Content.RootDirectory + "/TestMaps/Map - Hitbox/");
 
-        // ---------------
+        
 
         tileHeight = tileSet.TileHeight;
         tileWidth = tileSet.TileWidth;
@@ -152,9 +183,9 @@ public class Game1 : Game
             
             TiledObject currentObject = collisionLayerObjects[i];
             TiledProperty currentProperty = currentObject.properties[0];
-            Vector2 tempPosition = new Vector2(currentObject.x, currentObject.y); // objects position
+            Vector2 tempPosition = new Vector2(currentObject.x, currentObject.y);
+            CollisionObject tempObject;
             
-            CollisionObject tempObject; // to store the object
             
             
             // Create collision objects depending on the type of collision (NOTE: Hitbox is commented out until its fixed)
@@ -166,44 +197,37 @@ public class Game1 : Game
                 case CollisionObject.PLATFORM:
                     tempObject = new Platform(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height);
                     break;
-                // case CollisionObject.HITBOX:
-                //     tempObject = new Hitbox(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height);
-                //     break;
+                case CollisionObject.HITBOX:
+                    float directionX = (float) Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
+                    float directionY = (float) Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
+
+                    tempObject = new Hitbox(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height, 0, new Vector2(directionX, directionY), 5,25);
+                    tempObject.active = true;
+                    break;
                 default:
                     tempObject = new Ground(new Vector2(currentObject.x, currentObject.y),  currentObject.width, currentObject.height);
                     break;
             }
 
-            allCollisionObjects.Add(tempObject); // add the collision object to the list
+            allCollisionObjects.Add(tempObject);
         }
 
     }
-    protected override void LoadContent()
-    {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
-        Console.WriteLine("Loading Content...");
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        Background = Content.Load<Texture2D>("Sky");
-        font = Content.Load<SpriteFont>("TestFont");
+    // ============================================= UPDATING =============================================
+
+    public void check_Collisions(){
+        // Add player1 active collisions
+        for (int i = 0; i < player1.activeCollisions.Count; i++)
+        {
+            if (!allCollisionObjects.Contains(player1.activeCollisions[i])) allCollisionObjects.Add(player1.activeCollisions[i]);
+        }
+        // Add the player2 active collisions
+        for (int i = 0; i < player2.activeCollisions.Count; i++)
+        {
+            if (!allCollisionObjects.Contains(player2.activeCollisions[i])) allCollisionObjects.Add(player2.activeCollisions[i]);
+        }
         
-        Console.WriteLine("Loading Map...");
-        LoadMap();
-
-        Console.WriteLine("Loading Character assests...");
-        LoadCharacter();
-
-        Console.WriteLine(" -------------------- LoadContent: OK --------------------");
-    }
-
-
-    // ----------------------------------------------------- UPDATING -----------------------------------------------------
-    
-    // Handle and resolve all the collisions in the collision list
-    public void check_Collisions()
-    {
-        player2.grounded = false;
-
         // Currently this loop does more checks than necessary. Will change so that it only checks unique combinations
         for (int indexA = 0; indexA < allCollisionObjects.Count; indexA++){
              for (int indexB = 0; indexB < allCollisionObjects.Count; indexB++)
@@ -211,30 +235,66 @@ public class Game1 : Game
                 if (indexA != indexB)
                 {
                     allCollisionObjects[indexA].OnCollision(allCollisionObjects[indexB]);
-   
                 }
             }
         }
     }
 
-    protected override void Update(GameTime gameTime)
+    protected override void Update(GameTime gameTime) // TODO: Add your update logic here
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
-        player2.get_Input();
+        // TODO: Time is buggy, THe animation speed doubles when both players are in the same state, will fix later
+        player1.update_time(gameTime); // update the frame count for the state
+        player2.update_time(gameTime); 
         
-        check_Collisions();
+        player1.update_input(); // Read the players input
+        player2.update_input(); 
 
-        player2.Update(gameTime);
+        player1.update_state(); // Modify their state
+        player2.update_state(); 
 
-        base.Update(gameTime);
+        check_Collisions(); // Check the collisions 
+
+        player1.update_physics(); // set the final position, velocity, and acceleration of the player
+        player2.update_physics(); 
+
+        player1.update_animations();// set the corresponding animation
+        player2.update_animations(); 
+
+        player1.animManager.Update(gameTime); // update the frame count for the animation
+        player2.animManager.Update(gameTime); 
+    
+        // player2.Update(gameTime);
+
+        // base.Update(gameTime);
     }
 
-    // ----------------------------------------------------- DRAWING -----------------------------------------------------
+    
+    // ============================================= DRAWING =============================================
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+
+        _spriteBatch.Begin();
+
+        _spriteBatch.Draw(Background, new Rectangle(-100, -100, 1600, 1000), Color.White);
+
+        DrawMap(gameTime);
+
+        player1.Draw(gameTime, _spriteBatch);
+        player2.Draw(gameTime, _spriteBatch);
+
+        _spriteBatch.End();
+
+        base.Draw(gameTime);
+    }
+
     protected void DrawMap(GameTime gameTime){
 
-        // Tiled works in layers. Just to start, looping through the tiles in the FIRST layer ( the layer that has the level layout ).
+        // Tiled works in layers. Just to start, looping through the tiles in the FIRST layer.
         TiledLayer layer = tileMap.Layers[0];
         
         
@@ -272,31 +332,17 @@ public class Game1 : Game
                 // NOTE: This block of code is for collitions only. More specificaly, this uses
                 //       A different method for parsing collisons. It reads collisions by tiles individually rather
                 //       than by objects. uncomment if this method is preferred
-
                 // //To access the collision linked to a specific tile. First get the specified tile
                 // TiledTile currentTile = tileMap.GetTiledTile(mapTileset, currTileset, gid);
                 
                 // // Then extract the corresponding object that was tied to the tile
                 // TiledObject tileCollisions = currentTile.objects[0];
 
+
+
                 _spriteBatch.Draw(tilesetTexture, destination, source, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0f);
+
             }
         }
-    }
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        _spriteBatch.Begin();
-
-        _spriteBatch.Draw(Background, new Rectangle(-100, -100, 1600, 1000), Color.White); // Draw background
-
-        DrawMap(gameTime); // Draw the map
-
-        player2.Draw(gameTime, _spriteBatch); // Draw the player
-
-        _spriteBatch.End();
-
-        base.Draw(gameTime);
     }
 }
