@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Input;
 
 using Alakoz.Animate;
 using Alakoz.Input;
-using Alakoz.Species;
+using Alakoz.LivingBeings;
 
 
 using TiledCS;
@@ -25,6 +25,9 @@ namespace Alakoz.Collision
     public class Hurtbox : CollisionObject{
         public Vector2 origin;
         public Vector2 scale {get; set;}
+        public Animation sprite;
+        public AnimationManager spriteManager;
+        public Player owner; // The entity that owns this hurtbox
 
         public float left {get {return getPosition().X;} set{;}}
         public float right {get {return getPosition().X + width;} set{;}}
@@ -34,10 +37,6 @@ namespace Alakoz.Collision
         public CollisionShape nextBounds {get {return new CollisionShape(owner.nextPosition.X, owner.nextPosition.Y, width, height);} set{;}}
         
         public bool hurtboxVisual {get; set;}
-        
-        public Animation sprite;
-        public AnimationManager spriteManager;
-        public Player owner; // The entity that owns this hurtbox
     
         public Hurtbox(Player newOwner, Vector2 newPosition, float newWidth, float newHeight)
         { 
@@ -72,7 +71,26 @@ namespace Alakoz.Collision
         public override CollisionShape getBounds() { return new CollisionShape(getPosition().X, getPosition().Y, width, height); }
         public CollisionShape getNextBounds() {return new CollisionShape(getNextPosition().X, getNextPosition().Y, width, height); }
         public void update_Position(Vector2 updatedPosition) { position = updatedPosition; }
-        public override void OnCollision(CollisionObject currObject)  { base.OnCollision(currObject); }
+        public override void OnCollision(CollisionObject currObject)  
+        { switch (currObject.type)
+            {
+                case HURTBOX:
+                    hurtboxCollision((Hurtbox)currObject);
+                    break;
+                case HITBOX:
+                    hitboxCollision((Hitbox)currObject);
+                    break;
+                case GROUND:
+                    groundCollision((Ground)currObject);
+                    break;
+                case PLATFORM:
+                    platformCollision((Platform)currObject);
+                    break;
+                case enemyHURTBOX:
+                    enemyHurtboxCollision((enemyHurtbox)currObject);
+                    break;
+            }
+        }
 
         // ========================================================== UPDATING & DRAWING ==========================================================
         public void Update(GameTime gameTime)
@@ -96,7 +114,7 @@ namespace Alakoz.Collision
         // --------------------------------------------------------- Hitbox 
         public override void hitboxCollision(Hitbox currObject)
         {   
-            bool intersecting = getNextBounds().isIntersecting(currObject.getBounds());
+            bool intersecting = getBounds().isIntersecting(currObject.getBounds());
 
             float heightOffset = currObject.top - height;
 
@@ -120,6 +138,36 @@ namespace Alakoz.Collision
             if (owner.hitstun == 0 && currObject.isColliding(this))
             {
                     currObject.remove(this);
+            }
+        }
+
+        public void enemyHurtboxCollision(enemyHurtbox enemyHurtbox) {
+
+            Hitbox enemyHitbox = enemyHurtbox.owner.GetHitbox();
+            
+            bool intersecting = getBounds().isIntersecting(enemyHitbox.getBounds());
+            float heightOffset = enemyHitbox.top - height;
+
+            if (intersecting && enemyHitbox.active)
+            {
+                // Handle the collision
+                if (!enemyHitbox.isColliding(this) && !enemyHitbox.isIgnore(this)) // To prevent hitting multiple times
+                {
+                    owner.health -= enemyHitbox.damage;
+                    owner.hit = true;
+                    owner.KB = enemyHitbox.knockback;
+                    owner.applyKB = true;
+                    owner.hitstun = enemyHitbox.hitstun;
+                    // Console.WriteLine(currObject.hitstun);
+                    // Console.WriteLine(currObject.knockback);
+
+                    enemyHitbox.append(this);
+                }
+            }
+            
+            if (owner.hitstun == 0 && enemyHitbox.isColliding(this))
+            {
+                    enemyHitbox.remove(this);
             }
         }
         
@@ -212,4 +260,5 @@ namespace Alakoz.Collision
             }
         }
     }
+    
 }

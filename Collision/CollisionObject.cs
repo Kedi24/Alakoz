@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Input;
 
 using Alakoz.Animate;
 using Alakoz.Input;
-using Alakoz.Species;
+using Alakoz.LivingBeings;
 using Alakoz.Collision;
 
 using TiledCS;
@@ -39,6 +39,7 @@ namespace Alakoz.Collision
         public const string GROUND = "ground"; // Flat ground collision type
 
         public const string PLATFORM = "platform"; 
+        public const string enemyHURTBOX = "enemyHurtbox";
 
         public string getType() { return type; }
         public virtual Vector2 getPosition() { return position; }
