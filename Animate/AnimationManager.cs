@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Input;
 
 using Alakoz.Animate;
 using Alakoz.Input;
-using Alakoz.Species;
+using Alakoz.LivingBeings;
 using Alakoz.Collision;
 
 namespace Alakoz.Animate
@@ -110,7 +110,7 @@ namespace Alakoz.Animate
 				scale,
 				spriteEffects,
 				0f) ;
-            if (displayFrames) spriteBatch.DrawString(frameFont, _frameMSG, new Vector2(0f, 400), Color.Gold);
+            // if (displayFrames) spriteBatch.DrawString(frameFont, _frameMSG, new Vector2(0f, 400), Color.Gold);
         }
 	}
 }

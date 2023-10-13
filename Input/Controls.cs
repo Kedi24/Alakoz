@@ -7,7 +7,6 @@ using Microsoft.Xna.Framework.Input;
 
 using Alakoz.Animate;
 using Alakoz.Input;
-using Alakoz.Species;
 
 namespace Alakoz.Input
 {

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.1" orientation="orthogonal" renderorder="right-down" width="32" height="23" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="21">
+ <tileset firstgid="1" source="Base Tileset.tsx"/>
+ <objectgroup id="2" name="Collision Layer">
+  <object id="1" x="128" y="544" width="736" height="96">
+   <properties>
+    <property name="aTYPE" value="ground"/>
+   </properties>
+  </object>
+  <object id="2" x="192" y="480" width="128" height="16">
+   <properties>
+    <property name="aTYPE" value="platform"/>
+   </properties>
+  </object>
+  <object id="12" x="256" y="384" width="128" height="16">
+   <properties>
+    <property name="aTYPE" value="platform"/>
+   </properties>
+  </object>
+  <object id="3" x="704" y="512" width="32" height="32">
+   <properties>
+    <property name="aTYPE" value="hitbox"/>
+    <property name="bDirectionX" type="float" value="-5"/>
+    <property name="cDirectionY" type="float" value="-5"/>
+   </properties>
+  </object>
+  <object id="5" x="640" y="512" width="32" height="32">
+   <properties>
+    <property name="aTYPE" value="hitbox"/>
+    <property name="bDirectionX" type="float" value="-7"/>
+    <property name="cDirectionY" type="float" value="-5"/>
+   </properties>
+  </object>
+  <object id="14" x="224" y="288" width="128" height="16">
+   <properties>
+    <property name="aTYPE" value="platform"/>
+   </properties>
+  </object>
+  <object id="15" x="160" y="128" width="192" height="32">
+   <properties>
+    <property name="aTYPE" value="platform"/>
+   </properties>
+  </object>
+  <object id="16" x="0" y="0" width="16" height="288">
+   <properties>
+    <property name="aTYPE" value="ground"/>
+   </properties>
+  </object>
+  <object id="18" x="144" y="0" width="16" height="288">
+   <properties>
+    <property name="aTYPE" value="ground"/>
+   </properties>
+  </object>
+  <object id="19" x="0" y="384" width="160" height="32">
+   <properties>
+    <property name="aTYPE" value="ground"/>
+   </properties>
+  </object>
+  <object id="20" x="448" y="384" width="64" height="16">
+   <properties>
+    <property name="aTYPE" value="platform"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <layer id="1" name="Tile Layer 1" width="32" height="23">
+  <data encoding="csv">
+9,0,0,0,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+9,0,0,0,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+9,0,0,0,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+9,0,0,0,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+9,0,0,0,25,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+9,0,0,0,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+9,0,0,0,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+9,0,0,0,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+9,0,0,0,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,33,33,33,33,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+1,1,1,1,1,0,0,0,33,33,33,33,0,0,33,33,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,9,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,9,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,9,25,0,0,0,33,33,33,33,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,9,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,7,0,0,0,0,0,0,0,0,0,
+0,9,25,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,
+0,9,25,0,1,1,1,1,1,1,1,1,1,1,12,0,28,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,
+0,9,25,0,1,1,1,1,1,1,1,1,1,1,12,0,28,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,
+0,9,25,0,0,0,0,0,0,0,0,0,0,0,12,0,28,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,9,25,0,0,0,0,0,0,0,0,0,0,0,12,0,28,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,9,25,0,0,0,0,0,0,0,0,0,0,0,12,0,28,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+</map>

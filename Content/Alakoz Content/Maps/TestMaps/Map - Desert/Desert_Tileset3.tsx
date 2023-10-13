@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.10" tiledversion="1.10.1" name="Desert_Tileset3" tilewidth="33" tileheight="33" tilecount="48" columns="8">
- <image source="../../../../../Downloads/Creative/Programming Projects/Summer Project/TileSets/examples/tmw_desert_spacing.png" width="265" height="199"/>
+ <image source="../../../../../../Alakoz/Content/TestMaps/Map - Desert/tmw_desert_spacing.png" width="265" height="199"/>
  <tile id="19">
   <objectgroup draworder="index" id="2">
    <object id="1" x="0.0835862" y="0.0835862" width="32.7658" height="32.7658"/>

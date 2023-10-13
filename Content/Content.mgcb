@@ -10,6 +10,468 @@
 
 #-------------------------------- References --------------------------------#
 
+/reference:../References/MonoGame.Framework.dll
+/reference:../References/MonoGame.Extended.Content.Pipeline.dll
 
 #---------------------------------- Content ---------------------------------#
+
+#begin Alakoz Content/Backgrounds/Dark Wallpaper #1.jpeg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Backgrounds/Dark Wallpaper #1.jpeg
+
+#begin Alakoz Content/Backgrounds/Scala Ad Caelum.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Backgrounds/Scala Ad Caelum.jpg
+
+#begin Alakoz Content/Backgrounds/Sky.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Backgrounds/Sky.png
+
+#begin Alakoz Content/Effects/General/Hitbox.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Effects/General/Hitbox.png
+
+#begin Alakoz Content/Effects/General/Hurtbox.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Effects/General/Hurtbox.png
+
+#begin Alakoz Content/Fonts/TestFont.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Alakoz Content/Fonts/TestFont.spritefont
+
+#begin Alakoz Content/Maps/TestMaps/Map - Desert/Desert_Tileset2.tsx
+/copy:Alakoz Content/Maps/TestMaps/Map - Desert/Desert_Tileset2.tsx
+
+#begin Alakoz Content/Maps/TestMaps/Map - Desert/Desert_Tileset3.tsx
+/copy:Alakoz Content/Maps/TestMaps/Map - Desert/Desert_Tileset3.tsx
+
+#begin Alakoz Content/Maps/TestMaps/Map - Desert/TestLevel - 1.tmx
+/copy:Alakoz Content/Maps/TestMaps/Map - Desert/TestLevel - 1.tmx
+
+#begin Alakoz Content/Maps/TestMaps/Map - Desert/TestLevel - 2.tmx
+/copy:Alakoz Content/Maps/TestMaps/Map - Desert/TestLevel - 2.tmx
+
+#begin Alakoz Content/Maps/TestMaps/Map - Desert/TileProject - Test 1.tmx
+/copy:Alakoz Content/Maps/TestMaps/Map - Desert/TileProject - Test 1.tmx
+
+#begin Alakoz Content/Maps/TestMaps/Map - Desert/tmw_desert_spacing.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/TestMaps/Map - Desert/tmw_desert_spacing.png
+
+#begin Alakoz Content/Maps/TestMaps/Map - Hitbox/Base Level.tmx
+/copy:Alakoz Content/Maps/TestMaps/Map - Hitbox/Base Level.tmx
+
+#begin Alakoz Content/Maps/TestMaps/Map - Hitbox/Base Tileset.tsx
+/copy:Alakoz Content/Maps/TestMaps/Map - Hitbox/Base Tileset.tsx
+
+#begin Alakoz Content/Maps/TestMaps/Map - Hitbox/Base_Tileset.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/TestMaps/Map - Hitbox/Base_Tileset.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/ball.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/ball.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_Falling.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_Falling.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_Idle.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_Idle2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_Idle2.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_Jump.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_Running.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_Running.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_RunningLeft.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_RunningLeft.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_RunStart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_RunStart.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_RunStop.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_RunStop.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_RunStop2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_RunStop2.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_RunStopLeft.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_RunStopLeft.png
+
+#begin Alakoz Content/Species/Player/Base_Animations/Base_Turnaround.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Base_Animations/Base_Turnaround.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Ball.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Ball.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_BallEnd.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_BallEnd.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_BallStart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_BallStart.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Crouch.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Crouch.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_CrouchEnd.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_CrouchEnd.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_CrouchStart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_CrouchStart.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Dash.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Dash.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_DashEnd.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_DashEnd.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_DashStart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_DashStart.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Fall.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Fall.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Hit.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Hit.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_HitStart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_HitStart.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Idle.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Jump.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_JumpStart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_JumpStart.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Run.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Runstop.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Runstop.png
 

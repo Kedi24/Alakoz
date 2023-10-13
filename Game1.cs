@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Input;
 
 using Alakoz.Animate;
 using Alakoz.Input;
-using Alakoz.Species;
+using Alakoz.LivingBeings;
 using Alakoz.Collision;
 
 using TiledCS;
@@ -25,9 +25,15 @@ public class Game1 : Game
     Texture2D Background;
     Player player1;
     Player player2;
-    Dictionary<string, Animation> animations;
+    Enemy enemy;
+    Dictionary<string, Animation> player1Animations;
+
+    Dictionary<string, Animation> player2Animations;
+    Dictionary<string, Animation> enemyAnimations;
+    
     Vector2 Player1Pos;
     Vector2 Player2Pos;
+    Vector2 enemyPos;
     Vector2 SymbolPosition;
     
     // ----- MAP ----- //
@@ -51,7 +57,7 @@ public class Game1 : Game
         _graphics = new GraphicsDeviceManager(this);
         _graphics.PreferredBackBufferWidth = 1080;
         _graphics.PreferredBackBufferHeight = 720;
-        Content.RootDirectory = "Content";
+        Content.RootDirectory = "Content/";
         IsMouseVisible = true;
     }
     // ============================================= INITIALIZING =============================================
@@ -62,12 +68,15 @@ public class Game1 : Game
         this.TargetElapsedTime = TimeSpan.FromSeconds(1d / 60d);
 
         allCollisionObjects = new List<CollisionObject>();
-        animations = new Dictionary<string, Animation>();
+        player1Animations = new Dictionary<string, Animation>();
+        player2Animations = new Dictionary<string, Animation>();
+        enemyAnimations = new Dictionary<string, Animation>();
+
         SymbolPosition = new Vector2(400, 0);
         Player1Pos = new Vector2(400, 0);
-        Player2Pos = new Vector2(500, 0);
+        enemyPos = new Vector2(300, 300);
+        // Player2Pos = new Vector2(500, 0);
         
-
         base.Initialize();
     }
 
@@ -78,72 +87,135 @@ public class Game1 : Game
         Console.WriteLine("Loading Content...");
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        Background = Content.Load<Texture2D>("Sky");
-        font = Content.Load<SpriteFont>("TestFont");
+        // Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Sky");
+        Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Dark Wallpaper #1");
+        // Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Scala Ad Caelum");
+        
+        // font = Content.Load<SpriteFont>("Alakoz Content/Fonts/TestFont");
         
         Console.WriteLine("Loading Map...");
         LoadMap();
 
         Console.WriteLine("Loading Character assests...");
-        LoadCharacter();
+        LoadPlayer1();
+        // LoadPlayer2();
+        LoadEnemy();
 
         Console.WriteLine(" -------------------- LoadContent: OK --------------------");
     }
-    protected void LoadCharacter(){
-        
-        Animation Symbol = new Animation(Content.Load<Texture2D>("Base_Animations/ball"), 1);
-        Animation playerHurtbox = new Animation(Content.Load<Texture2D>("Base_Animations/Hurtbox"), 1);
-        Animation playerHitbox = new Animation(Content.Load<Texture2D>("Base_Animations/Hitbox"), 1);
+    protected void LoadPlayer1()
+    {
+        string playerDirectory = "Alakoz Content/Species/Player/Rebel_Animations/"; 
+        string enemyDirectory = "Alakoz Content/Species/Player/Base_Animations/";
+        string effectDirectory = "Alakoz Content/Effects/General/";
 
-        Animation idle = new Animation(Content.Load<Texture2D>("Base_Animations/Base_Idle"), 32);
-        Animation idle2 = new Animation(Content.Load<Texture2D>("Base_Animations/Base_Idle2"), 8);
-        Animation run = new Animation(Content.Load<Texture2D>("Base_Animations/Base_Running"), 22);
-        Animation runStop = new Animation(Content.Load<Texture2D>("Base_Animations/Base_RunStop"), 24, false);
-        Animation turnaround = new Animation(Content.Load<Texture2D>("Base_Animations/Base_Turnaround"), 12);
-        Animation jump = new Animation(Content.Load<Texture2D>("Base_Animations/Base_Jump"), 10, false);
-        Animation falling = new Animation(Content.Load<Texture2D>("Base_Animations/Base_Falling"), 12);
+        Animation Symbol = new Animation(Content.Load<Texture2D>( enemyDirectory + "ball"), 1);
+        Animation playerHurtbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
+        Animation playerHitbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
 
-        //jump.isLooping = false;
-        // runStop.isLooping = false;
+        Animation idle = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Idle"), 40);
+        Animation run = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Run"), 20);
+        Animation runStop = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Runstop"), 21, false);
+        Animation jump = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Jump"), 12);
+        Animation falling = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Fall"), 12);
 
-        animations.Add("ball", Symbol);
-        animations.Add("Hurtbox", playerHurtbox);
-        animations.Add("Hitbox", playerHitbox);
-        animations.Add("Base_Idle", idle);
-        animations.Add("Base_Running", run);
-        animations.Add("Base_Turnaround", turnaround);
-        animations.Add("Base_RunStop", runStop);
-        animations.Add("Base_Jump", jump);
-        animations.Add("Base_Falling", falling);
+        player1Animations.Add("ball", Symbol);
+        player1Animations.Add("Hurtbox", playerHurtbox);
+        player1Animations.Add("Hitbox", playerHitbox);
+        player1Animations.Add("Base_Idle", idle);
+        player1Animations.Add("Base_Running", run);
+        player1Animations.Add("Base_Turnaround", Symbol);
+        player1Animations.Add("Base_RunStop", runStop);
+        player1Animations.Add("Base_Jump", jump);
+        player1Animations.Add("Base_Falling", falling);
 
-        player1 = new Player(animations, Player1Pos);
-        player2 = new Player(animations, Player2Pos);
+        player1 = new Player(player1Animations, Player1Pos);
 
-        // THIS IS FOR THE INFORMATION DISPLAY, MOVE INTO PLAYER CLASS LATER
-        player1.stateFONT = font;
-        player1.animManager.frameFont = font;
-        player1.hurtbox.spriteManager.frameFont = font;
-
-        player2.stateFONT = font;
-        player2.animManager.frameFont = font;
-        player2.hurtbox.spriteManager.frameFont = font;
+        // ------------------------ Player 1 Information Display
+        // player1.stateFONT = font;
+        // player1.animManager.frameFont = font;
+        // player1.hurtbox.spriteManager.frameFont = font;
         
         Console.WriteLine("Width: " + idle.frameWidth);
         Console.WriteLine("Height: " + idle.frameHeight);
 
-        // Setup the controls
+        // ------------------------ Player 1 Controls
         player1.controls.reset();
-        player2.controls.altControls();
     }
 
+    protected void LoadPlayer2()
+    {
+        string enemyDirectory = "Alakoz Content/Species/Player/Base_Animations/";
+        string effectDirectory = "Alakoz Content/Effects/General/";
+
+        Animation Symbol = new Animation(Content.Load<Texture2D>( enemyDirectory + "ball"), 1);
+        Animation playerHurtbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
+        Animation playerHitbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
+
+        Animation idle = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Idle"), 32);
+        Animation run = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Running"), 22);
+        Animation runStop = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_RunStop"), 24, false);
+        Animation jump = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Jump"), 10, false);
+        Animation falling = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Falling"), 12);
+
+        player2Animations.Add("ball", Symbol);
+        player2Animations.Add("Hurtbox", playerHurtbox);
+        player2Animations.Add("Hitbox", playerHitbox);
+        player2Animations.Add("Base_Idle", idle);
+        player2Animations.Add("Base_Running", run);
+        player2Animations.Add("Base_Turnaround", Symbol);
+        player2Animations.Add("Base_RunStop", runStop);
+        player2Animations.Add("Base_Jump", jump);
+        player2Animations.Add("Base_Falling", falling);
+        player2 = new Player(player2Animations, Player2Pos);
+
+        // ------------------------ Player 2 Information Display
+        // player2.stateFONT = font;
+        // player2.animManager.frameFont = font;
+        // player2.hurtbox.spriteManager.frameFont = font;
+
+        // ------------------------ Player 2 Controls
+        // player2.controls.altControls();
+    }
+
+    protected void LoadEnemy()
+    {
+        string enemyDirectory = "Alakoz Content/Species/Player/Base_Animations/";
+        string effectDirectory = "Alakoz Content/Effects/General/";
+
+        Animation Symbol = new Animation(Content.Load<Texture2D>( enemyDirectory + "ball"), 1);
+        Animation playerHurtbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
+        Animation playerHitbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
+
+        Animation idle = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Idle"), 32);
+        Animation idle2 = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Idle2"), 8);
+        Animation run = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Running"), 22);
+        Animation runStop = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_RunStop"), 24, false);
+        Animation turnaround = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Turnaround"), 12);
+        Animation jump = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Jump"), 10, false);
+        Animation falling = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Falling"), 12);
+
+        enemyAnimations.Add("ball", Symbol);
+        enemyAnimations.Add("Hurtbox", playerHurtbox);
+        enemyAnimations.Add("Hitbox", playerHitbox);
+        enemyAnimations.Add("Base_Idle", idle);
+        enemyAnimations.Add("Base_Running", run);
+        enemyAnimations.Add("Base_Turnaround", Symbol);
+        enemyAnimations.Add("Base_RunStop", runStop);
+        enemyAnimations.Add("Base_Jump", jump);
+        enemyAnimations.Add("Base_Falling", falling);
+        enemy = new Enemy(enemyAnimations, enemyPos);
+    }
     protected void LoadPlayerCollisions()
     {
         allCollisionObjects.Add(player1.hurtbox);
-        allCollisionObjects.Add(player2.hurtbox);
+        // allCollisionObjects.Add(player2.hurtbox);
     }
 
-    protected void LoadMap(){
-        
+    protected void LoadMap()
+    {
+        string testmapDirectory = "Alakoz Content/Maps/TestMaps/";
+
         // MAP 1 - Uncomment to load Map 1 and comment map 2
         // tileMap = new TiledMap(Content.RootDirectory + "/TestMaps/TestLevel - 2.tmx");
         // tileSet = new TiledTileset(Content.RootDirectory + "/TestMaps/Desert_Tileset3.tsx");
@@ -152,13 +224,11 @@ public class Game1 : Game
         // allTilesets = tileMap.GetTiledTilesets(Content.RootDirectory + "/TestMaps/");
 
         // MAP 2 - Uncomment to load Map 2 and comment Map 1
-        tileMap = new TiledMap(Content.RootDirectory + "/TestMaps/Map - Hitbox/Base Level.tmx");
-        tileSet = new TiledTileset(Content.RootDirectory + "/TestMaps/Map - Hitbox/Base Tileset.tsx");
-        tilesetTexture = Content.Load<Texture2D>("TestMaps/Map - Hitbox/Base_Tileset");
+        tileMap = new TiledMap(Content.RootDirectory + testmapDirectory + "Map - Hitbox/Base Level.tmx");
+        tileSet = new TiledTileset(Content.RootDirectory + testmapDirectory + "Map - Hitbox/Base Tileset.tsx");
+        tilesetTexture = Content.Load<Texture2D>(testmapDirectory + "Map - Hitbox/Base_Tileset");
 
-        allTilesets = tileMap.GetTiledTilesets(Content.RootDirectory + "/TestMaps/Map - Hitbox/");
-
-        
+        allTilesets = tileMap.GetTiledTilesets(Content.RootDirectory + testmapDirectory + "Map - Hitbox/");
 
         tileHeight = tileSet.TileHeight;
         tileWidth = tileSet.TileWidth;
@@ -169,6 +239,7 @@ public class Game1 : Game
         collisionLayer = tileMap.Layers[1];
         
         collisionLayerObjects = collisionLayer.objects;
+        
 
         LoadMapCollisions();
     }
@@ -216,17 +287,20 @@ public class Game1 : Game
 
     // ============================================= UPDATING =============================================
 
-    public void check_Collisions(){
+    public void checkCollisions(){
         // Add player1 active collisions
         for (int i = 0; i < player1.activeCollisions.Count; i++)
         {
             if (!allCollisionObjects.Contains(player1.activeCollisions[i])) allCollisionObjects.Add(player1.activeCollisions[i]);
         }
-        // Add the player2 active collisions
-        for (int i = 0; i < player2.activeCollisions.Count; i++)
-        {
-            if (!allCollisionObjects.Contains(player2.activeCollisions[i])) allCollisionObjects.Add(player2.activeCollisions[i]);
+        for (int i = 0; i < enemy.activeCollisions.Count; i++) {
+            if (!allCollisionObjects.Contains(enemy.activeCollisions[i])) allCollisionObjects.Add(enemy.activeCollisions[i]);
         }
+        // Add the player2 active collisions
+        //for (int i = 0; i < player2.activeCollisions.Count; i++)
+        //{
+        //    if (!allCollisionObjects.Contains(player2.activeCollisions[i])) allCollisionObjects.Add(player2.activeCollisions[i]);
+        //}
         
         // Currently this loop does more checks than necessary. Will change so that it only checks unique combinations
         for (int indexA = 0; indexA < allCollisionObjects.Count; indexA++){
@@ -247,28 +321,32 @@ public class Game1 : Game
 
         // TODO: Time is buggy, THe animation speed doubles when both players are in the same state, will fix later
         player1.update_time(gameTime); // update the frame count for the state
-        player2.update_time(gameTime); 
+       // player2.update_time(gameTime); 
+       enemy.update_time(gameTime);
         
         player1.update_input(); // Read the players input
-        player2.update_input(); 
+       //player2.update_input(); 
 
         player1.update_state(); // Modify their state
-        player2.update_state(); 
+       // player2.update_state();
+       enemy.update_state(); 
 
-        check_Collisions(); // Check the collisions 
+        checkCollisions(); // Check the collisions 
 
         player1.update_physics(); // set the final position, velocity, and acceleration of the player
-        player2.update_physics(); 
+        //player2.update_physics(); 
+        enemy.update_physics();
 
         player1.update_animations();// set the corresponding animation
-        player2.update_animations(); 
+        //player2.update_player1Animations(); 
 
         player1.animManager.Update(gameTime); // update the frame count for the animation
-        player2.animManager.Update(gameTime); 
+       // player2.animManager.Update(gameTime); 
     
         // player2.Update(gameTime);
 
         // base.Update(gameTime);
+        enemy.animManager.Update(gameTime);
     }
 
     
@@ -285,7 +363,8 @@ public class Game1 : Game
         DrawMap(gameTime);
 
         player1.Draw(gameTime, _spriteBatch);
-        player2.Draw(gameTime, _spriteBatch);
+        //player2.Draw(gameTime, _spriteBatch);
+        enemy.Draw(gameTime, _spriteBatch);
 
         _spriteBatch.End();
 
