@@ -8,10 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using Alakoz.Animate;
 using Alakoz.Input;
 using Alakoz.LivingBeings;
-
-
-using TiledCS;
-using System.Reflection.Metadata.Ecma335;
+using Alakoz.GameInfo;
 
 namespace Alakoz.Collision
 {
@@ -23,8 +20,9 @@ namespace Alakoz.Collision
     // to name a few.
     
     public class Hurtbox : CollisionObject{
-        public Vector2 origin;
+        public Vector2 origin; 
         public Vector2 scale {get; set;}
+        public Vector2 offset {get; set;}
         public Animation sprite;
         public AnimationManager spriteManager;
         public Player owner; // The entity that owns this hurtbox
@@ -40,14 +38,14 @@ namespace Alakoz.Collision
     
         public Hurtbox(Player newOwner, Vector2 newPosition, float newWidth, float newHeight)
         { 
-
-            position = newPosition; // Top left corner + the amount to offset the hurtbox by
+            offset = Vector2.Zero;
+            position = newPosition + offset; // Top left corner + the amount to offset the hurtbox by
             width = newWidth;
             height = newHeight;
             origin = new Vector2(newWidth / 2, newHeight / 2);
             scale = Vector2.One; // Default scaling
 
-            type = HURTBOX;
+            type = CollisionType.HURTBOX;
             owner = newOwner;
             currBounds = new CollisionShape(left, top, width, height);
         }
@@ -66,27 +64,41 @@ namespace Alakoz.Collision
         }
 
         // ========================================================== GENERAL ==========================================================       
-        public override Vector2 getPosition() { return owner.currPosition; }
-        public Vector2 getNextPosition() { return owner.nextPosition; }
-        public override CollisionShape getBounds() { return new CollisionShape(getPosition().X, getPosition().Y, width, height); }
-        public CollisionShape getNextBounds() {return new CollisionShape(getNextPosition().X, getNextPosition().Y, width, height); }
-        public void update_Position(Vector2 updatedPosition) { position = updatedPosition; }
+        public override Vector2 getPosition() { return owner.currPosition + offset; } // Current hurtbox Position
+        public Vector2 getNextPosition() { return owner.nextPosition + offset; } // Next hurtbox Position
+        public override CollisionShape getBounds() { return new CollisionShape(getPosition().X, getPosition().Y, width, height); } // Get the bounds based on the current position
+        public CollisionShape getNextBounds() {return new CollisionShape(getNextPosition().X, getNextPosition().Y, width, height); } // Get the bounds based on the next position
+        public void update_Position(Vector2 updatedPosition) { position = updatedPosition + offset; } // Update hurtbox position
+        public void changeDimensions(Vector2 newOffset, float newWidth, float newHeight) // Change hurtbox dimensions
+        {
+            offset = newOffset;
+            width = newWidth;
+            height = newHeight;
+            scale = new Vector2((newWidth / sprite.frameWidth), (newHeight / sprite.frameHeight));
+        }
+        public void resetDimensions() // Reset hurtbox dimensions
+        {
+            offset = Vector2.Zero;
+            width = owner.hurtboxWidth;
+            height = owner.hurtboxHeight;
+            scale = new Vector2((width / sprite.frameWidth), (height / sprite.frameHeight));
+        }
         public override void OnCollision(CollisionObject currObject)  
         { switch (currObject.type)
             {
-                case HURTBOX:
+                case CollisionType.HURTBOX:
                     hurtboxCollision((Hurtbox)currObject);
                     break;
-                case HITBOX:
+                case CollisionType.HITBOX:
                     hitboxCollision((Hitbox)currObject);
                     break;
-                case GROUND:
+                case CollisionType.GROUND:
                     groundCollision((Ground)currObject);
                     break;
-                case PLATFORM:
+                case CollisionType.PLATFORM:
                     platformCollision((Platform)currObject);
                     break;
-                case enemyHURTBOX:
+                case CollisionType.ENEMYHURTBOX:
                     enemyHurtboxCollision((enemyHurtbox)currObject);
                     break;
             }
@@ -99,9 +111,9 @@ namespace Alakoz.Collision
             if (hurtboxVisual) spriteManager.Update(gameTime);
         }
 
-        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, Vector2 position, SpriteEffects spriteEffects)
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, Vector2 newPosition, SpriteEffects spriteEffects)
         {
-            if (hurtboxVisual) spriteManager.Draw(gameTime, spriteBatch, position, scale, spriteEffects);
+            // if (hurtboxVisual) spriteManager.Draw(gameTime, spriteBatch, position, scale, spriteEffects);
         }
 
         // ========================================================== COLLISION CODE ==========================================================
@@ -185,24 +197,27 @@ namespace Alakoz.Collision
             /*
             Note that monogame places (0,0) at the top left of the screen and increases right and downwards 
             */
-
             // ------------- Horizontal Intersections
             if (leftintersection) 
             {
 
-                if ( owner.position.Y > heightOffset) // For intersectionsThis means that the player is approaching form below
+                if ( owner.position.Y > heightOffset  && owner.position.Y < currObject.bottom) // Player approaches from the left
                 {
                     owner.position.X =  currObject.left - width;
                     owner.acceleration = 0;
+                    
+                    if (owner.move_right) owner.wallCollide = true; // For wall related interactions
                 }
                 
             } else if (rightintersection)
             {
                 // Offset the player horizontally
-                if ( owner.position.Y >  heightOffset) // This means that the player is approaching from above
+                if ( owner.position.Y >  heightOffset && owner.position.Y < currObject.bottom) // Player appreaches from the right
                 {
                     owner.position.X =  currObject.right;
                     owner.acceleration = 0;
+
+                    if (owner.move_left) owner.wallCollide = true; // for wall related interactions
                 }
             };
             
@@ -221,13 +236,14 @@ namespace Alakoz.Collision
 				    
                     owner.jumping = false;
                     owner.velocity.Y = 0;
-                    owner.position.Y =  currObject.top - height;
+                    owner.position.Y =  currObject.top - owner.hurtboxHeight;
                 }
-                // ############################################################# NEED TO FIX BOTTOM COLLISION 
+                
             } else if ( bottomintersection )  // Player intersects the bottom of the currObject
             {
                 if (owner.position.Y > currObject.bottom)
                 {
+                    owner.velocity.Y = 0;
                     owner.position.Y = currObject.bottom;
                 }
             };
@@ -255,7 +271,7 @@ namespace Alakoz.Collision
 				    owner.grounded = true;
 				    owner.jumping = false;
                     owner.velocity.Y = 0;
-                    owner.position.Y =  currObject.top - height;
+                    owner.position.Y =  currObject.top - owner.hurtboxHeight;
                 }
             }
         }

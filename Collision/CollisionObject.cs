@@ -9,6 +9,7 @@ using Alakoz.Animate;
 using Alakoz.Input;
 using Alakoz.LivingBeings;
 using Alakoz.Collision;
+using Alakoz.GameInfo;
 
 using TiledCS;
 
@@ -23,25 +24,15 @@ namespace Alakoz.Collision
     
     public abstract class CollisionObject
     {
-         
-        public Vector2 position;
+         public Vector2 position;
 
         public bool active;
     
-        public string type;
+        public CollisionType type;
 
         public CollisionShape currBounds;
 
-        public const string HURTBOX = "hurtbox"; // Hurtbox collision type
-    
-        public const string HITBOX = "hitbox"; // Hitbox collision type
-     
-        public const string GROUND = "ground"; // Flat ground collision type
-
-        public const string PLATFORM = "platform"; 
-        public const string enemyHURTBOX = "enemyHurtbox";
-
-        public string getType() { return type; }
+        public CollisionType getType() { return type; }
         public virtual Vector2 getPosition() { return position; }
         public virtual CollisionShape getBounds() { return new CollisionShape(getPosition().X, getPosition().Y, width, height); }
         public float width {get; set;}
@@ -52,16 +43,16 @@ namespace Alakoz.Collision
         {
             switch (currObject.type)
             {
-                case HURTBOX:
+                case CollisionType.HURTBOX:
                     hurtboxCollision((Hurtbox)currObject);
                     break;
-                case HITBOX:
+                case CollisionType.HITBOX:
                     hitboxCollision((Hitbox)currObject);
                     break;
-                case GROUND:
+                case CollisionType.GROUND:
                     groundCollision((Ground)currObject);
                     break;
-                case PLATFORM:
+                case CollisionType.PLATFORM:
                     platformCollision((Platform)currObject);
                     break;
             }

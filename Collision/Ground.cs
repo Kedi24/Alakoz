@@ -8,10 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using Alakoz.Animate;
 using Alakoz.Input;
 using Alakoz.LivingBeings;
-
-
-
-using TiledCS;
+using Alakoz.GameInfo;
 
 namespace Alakoz.Collision
 {
@@ -38,7 +35,7 @@ namespace Alakoz.Collision
     
         public Ground(Vector2 newPosition, float newWidth, float newHeight)
         {
-            type = GROUND;
+            type = CollisionType.GROUND;
             position = newPosition; // Top left corner 
             width = newWidth;
             height = newHeight;
