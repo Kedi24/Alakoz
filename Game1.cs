@@ -19,21 +19,13 @@ public class Game1 : Game
     // ----- OTHER ----- //
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
-
     SpriteFont font;
-
+    Camera camera;
     // ----- PLAYER & BACKGROUND ----- //
+    List<Species> allSpecies; // All the species that need to be updated and drawn
     Texture2D Background;
     Player player1;
-    Player player2;
-    Enemy enemy;
-    Dictionary<StateType, Animation> player1Animations;
-    Dictionary<StateType, Animation> player2Animations;
-    Dictionary<StateType, Animation> enemyAnimations;
-    
-    Vector2 Player1Pos;
-    Vector2 Player2Pos;
-    Vector2 enemyPos;
+
     Vector2 SymbolPosition;
     
     // ----- MAP ----- //
@@ -66,16 +58,14 @@ public class Game1 : Game
         // TODO: Add your initialization logic here
 
         this.TargetElapsedTime = TimeSpan.FromSeconds(1d / 60d);
+        this.Window.AllowUserResizing = true;
 
+        camera = new Camera(this.Window, this.GraphicsDevice, 1080, 720); 
+
+        allSpecies = new List<Species>();
         allCollisionObjects = new List<CollisionObject>();
-        player1Animations = new Dictionary<StateType, Animation>();
-        player2Animations = new Dictionary<StateType, Animation>();
-        enemyAnimations = new Dictionary<StateType, Animation>();
 
         SymbolPosition = new Vector2(400, 0);
-        Player1Pos = new Vector2(400, 0);
-        enemyPos = new Vector2(300, 300);
-        // Player2Pos = new Vector2(500, 0);
         
         base.Initialize();
     }
@@ -87,8 +77,8 @@ public class Game1 : Game
         Console.WriteLine("Loading Content...");
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Sky");
-        // Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Dark Wallpaper #1");
+        // Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Sky");
+        Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Dark Wallpaper #1");
         // Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Scala Ad Caelum");
         
         // font = Content.Load<SpriteFont>("Alakoz Content/Fonts/TestFont");
@@ -97,12 +87,12 @@ public class Game1 : Game
         LoadMap();
 
         Console.WriteLine("Loading Character assests...");
-        LoadPlayer1();
-        LoadEnemy();
+        // LoadPlayer1();
+        // LoadEnemy();
 
         Console.WriteLine(" -------------------- LoadContent: OK --------------------");
     }
-    protected void LoadPlayer1()
+    protected Player LoadPlayer1(Dictionary<StateType, Animation> player1Animations, Vector2 spawnPoint)
     {
         string playerDirectory = "Alakoz Content/Species/Player/Rebel_Animations/"; 
         string enemyDirectory = "Alakoz Content/Species/Player/Base_Animations/";
@@ -162,7 +152,7 @@ public class Game1 : Game
         player1Animations.Add(StateType.HIT, hit);
         player1Animations.Add(StateType.HITSTART, hitStart);
         
-        player1 = new Player(player1Animations, Player1Pos);
+        player1 = new Player(player1Animations, spawnPoint);
 
         // THIS IS FOR THE INFORMATION DISPLAY, MOVE INTO PLAYER CLASS LATER
         // player1.stateFONT = font;
@@ -172,11 +162,12 @@ public class Game1 : Game
         // Setup the controls
         player1.controls.reset();
 
-        // return player1;
+        return player1;
     }
     
-    protected void LoadEnemy()
+    protected Enemy LoadEnemy(Dictionary<StateType, Animation> enemyAnimations, Vector2 spawnPoint)
     {
+
         string enemyDirectory = "Alakoz Content/Species/Player/Base_Animations/";
         string effectDirectory = "Alakoz Content/Effects/General/";
 
@@ -199,32 +190,39 @@ public class Game1 : Game
         enemyAnimations.Add(StateType.RUNEND, runStop);
         enemyAnimations.Add(StateType.JUMP, jump);
         enemyAnimations.Add(StateType.FALL, falling);
-        enemy = new Enemy(enemyAnimations, enemyPos);
+        Enemy enemy = new Enemy(enemyAnimations, spawnPoint);
         
         // ------------------------ Enemy Information Display
         // enemy.stateFONT = font;
         // enemy.animManager.frameFont = font;
         // enemy.hurtbox.spriteManager.frameFont = font;
 
+        return enemy;
     }
 
     protected void LoadMap()
     {
         string testmapDirectory = "Alakoz Content/Maps/TestMaps/";
 
-        // MAP 1 - Uncomment to load Map 1 and comment map 2
+        // ---------- MAP 1: Desert Level
         // tileMap = new TiledMap(Content.RootDirectory + "/TestMaps/TestLevel - 2.tmx");
         // tileSet = new TiledTileset(Content.RootDirectory + "/TestMaps/Desert_Tileset3.tsx");
         // tilesetTexture = Content.Load<Texture2D>("TestMaps/tmw_desert_spacing");
+        // allTilesets = tileMap.GetTiledTilesets(Content.RootDirectory + testmapDirectory + "Map - Desert/");
 
-        // allTilesets = tileMap.GetTiledTilesets(Content.RootDirectory + "/TestMaps/");
+        // ---------- MAP 2: Hitbox Level
+        // tileMap = new TiledMap(Content.RootDirectory + testmapDirectory + "Map - Hitbox/Base Level.tmx");
+        // tileSet = new TiledTileset(Content.RootDirectory + testmapDirectory + "Map - Hitbox/Base Tileset.tsx");
+        // tilesetTexture = Content.Load<Texture2D>(testmapDirectory + "Map - Hitbox/Base_Tileset");
+        // allTilesets = tileMap.GetTiledTilesets(Content.RootDirectory + testmapDirectory + "Map - Hitbox/");
 
-        // MAP 2 - Uncomment to load Map 2 and comment Map 1
-        tileMap = new TiledMap(Content.RootDirectory + testmapDirectory + "Map - Hitbox/Base Level.tmx");
-        tileSet = new TiledTileset(Content.RootDirectory + testmapDirectory + "Map - Hitbox/Base Tileset.tsx");
-        tilesetTexture = Content.Load<Texture2D>(testmapDirectory + "Map - Hitbox/Base_Tileset");
+        // ---------- MAP 3: Dynamic Level
+        tileMap = new TiledMap(Content.RootDirectory + testmapDirectory + "Map - Dynamic/Dynamic Level.tmx"); // Map
+        tileSet = new TiledTileset(Content.RootDirectory + testmapDirectory + "Map - Dynamic/Dynamic Tileset.tsx"); // Tileset
+        tilesetTexture = Content.Load<Texture2D>(testmapDirectory + "Map - Dynamic/Dynamic_TilesetImage"); // Image
+        allTilesets = tileMap.GetTiledTilesets(Content.RootDirectory + testmapDirectory + "Map - Dynamic/");
 
-        allTilesets = tileMap.GetTiledTilesets(Content.RootDirectory + testmapDirectory + "Map - Hitbox/");
+        
 
         tileHeight = tileSet.TileHeight;
         tileWidth = tileSet.TileWidth;
@@ -243,54 +241,105 @@ public class Game1 : Game
     // Loads each object from the collision layer of the map and creates corresponding collisionObjects
     protected void LoadMapCollisions(){
         
-        if (collisionLayerObjects.Length <= 0) return;
+         // NOTE: The Layers in TILED do not correspond exactly to the tileMap.Layers arrray
+        //          TILED | Array Index
+        //       TileLayer (0) = Index (0)
+        //       Static Layer (1) = Index (2)
+        //       Dynamic Layer (2) = Index (1)
 
-        // Parsing property information from the object layer to handle collisions
-        for (int i = 0; i < collisionLayerObjects.Length; i++) {
+        Console.WriteLine("Loading Static assests...");
+        // Load all the static collisions from layer[2] first
+        LoadStaticCollisions();
+
+        Console.WriteLine("Loading Dynamic assests...");
+        // Load all the dynamic collisions from layer[1] next
+        LoadDynamicCollisions(); 
+
+        // Local functions for clarity
+        void LoadStaticCollisions()
+        {
+            collisionLayer = tileMap.Layers[2];
+            collisionLayerObjects = collisionLayer.objects;
             
-            TiledObject currentObject = collisionLayerObjects[i];
-            TiledProperty currentProperty = currentObject.properties[0];
-            Vector2 tempPosition = new Vector2(currentObject.x, currentObject.y);
-            CollisionObject tempObject;
-            
-            // Ground
-            if (currentProperty.value.Equals(CollisionType.GROUND.ToString())) tempObject = new Ground(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height);
-            // Platforms
-            else if (currentProperty.value.Equals(CollisionType.PLATFORM.ToString())) tempObject = new Platform(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height);
-            // Hitboxes
-            else if (currentProperty.value.Equals(CollisionType.HITBOX.ToString()))
+            if (collisionLayerObjects.Length <= 0) return;
+
+            // Parsing property information from the object layer to handle collisions
+            for (int i = 0; i < collisionLayerObjects.Length; i++)
             {
-                float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
-                float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
 
-                tempObject = new Hitbox(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height, 0, new Vector2(directionX, directionY), 5, 25);
-                tempObject.active = true;
+                TiledObject currentObject = collisionLayerObjects[i]; // Current Object
+                TiledProperty currentProperty = currentObject.properties[0]; // Object type
+
+                CollisionObject tempObject; // Current collision Object
+
+                // Ground
+                if (currentProperty.value.Equals(CollisionType.GROUND.ToString())) tempObject = new Ground(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height);
+                // Platforms
+                else if (currentProperty.value.Equals(CollisionType.PLATFORM.ToString())) tempObject = new Platform(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height);
+                // Hitboxes
+                else if (currentProperty.value.Equals(CollisionType.HITBOX.ToString()))
+                {
+                    float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
+                    float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
+
+                    tempObject = new Hitbox(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height, 0, new Vector2(directionX, directionY), 5, 25);
+                    tempObject.active = true;
+                }
+                //Default
+                else tempObject = new Ground(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height);
+
+                allCollisionObjects.Add(tempObject);
             }
-            //Default
-            else tempObject = new Ground(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height);
-
-            allCollisionObjects.Add(tempObject);
         }
+        void LoadDynamicCollisions()
+        {
+            collisionLayer = tileMap.Layers[1]; 
+            collisionLayerObjects = collisionLayer.objects;
+            
+            if (collisionLayerObjects.Length <= 0) return;
 
+            // Parsing property information from the object layer to handle collisions
+            for (int i = 0; i < collisionLayerObjects.Length; i++)
+            {
+
+                TiledObject currentObject = collisionLayerObjects[i]; // Current Object
+                TiledProperty currentProperty = currentObject.properties[0]; // Object type
+
+                Species tempObject; // Current collision Object
+
+                // Player
+                if (currentProperty.value.Equals(CollisionType.PLAYERSPAWN.ToString())) 
+                {
+                    float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
+                    float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
+                    
+                    tempObject = LoadPlayer1(new Dictionary<StateType, Animation>(), new Vector2(directionX, directionY) );
+                }
+                // Enemy
+                else if (currentProperty.value.Equals(CollisionType.ENEMYSPAWN.ToString())) 
+                {
+                    float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
+                    float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
+                    
+                    tempObject = LoadEnemy(new Dictionary<StateType, Animation>(), new Vector2(directionX, directionY) );
+                }
+                // Otherwise just load an enemy
+                else 
+                {
+                    float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
+                    float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
+                    
+                    tempObject = LoadEnemy(new Dictionary<StateType, Animation>(), new Vector2(directionX, directionY) );
+                }
+
+                allSpecies.Add(tempObject);
+            }
+        }
     }
 
     // ============================================= UPDATING =============================================
 
     public void checkCollisions(){
-        // Add player1 active collisions
-        for (int i = 0; i < player1.activeCollisions.Count; i++)
-        {
-            if (!allCollisionObjects.Contains(player1.activeCollisions[i])) allCollisionObjects.Add(player1.activeCollisions[i]);
-        }
-        for (int i = 0; i < enemy.activeCollisions.Count; i++) {
-            if (!allCollisionObjects.Contains(enemy.activeCollisions[i])) allCollisionObjects.Add(enemy.activeCollisions[i]);
-        }
-        // Add the player2 active collisions
-        //for (int i = 0; i < player2.activeCollisions.Count; i++)
-        //{
-        //    if (!allCollisionObjects.Contains(player2.activeCollisions[i])) allCollisionObjects.Add(player2.activeCollisions[i]);
-        //}
-        
         // Currently this loop does more checks than necessary. Will change so that it only checks unique combinations
         for (int indexA = 0; indexA < allCollisionObjects.Count; indexA++){
              for (int indexB = 0; indexB < allCollisionObjects.Count; indexB++)
@@ -308,34 +357,28 @@ public class Game1 : Game
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
-        // TODO: Time is buggy, THe animation speed doubles when both players are in the same state, will fix later
-        player1.update_time(gameTime); // update the frame count for the state
-        // player2.update_time(gameTime); 
-        enemy.update_time(gameTime);
-        
-        player1.update_input(); // Read the players input
-        //player2.update_input(); 
-        enemy.update_input();
+         // Update each Species
+        foreach (Species entity in allSpecies)
+        {
+            entity.update_time(gameTime);
+            entity.update_input();
+            entity.update_state();
+            // Add the entities Collision to the list of objects to check
+            foreach (CollisionObject entityCollision in entity.activeCollisions) {if (!allCollisionObjects.Contains(entityCollision)) allCollisionObjects.Add(entityCollision);}
+        }
 
-        player1.update_state(); // Modify their state
-        // player2.update_state();
-        enemy.update_state(); 
+        // Resolve collisions
+        checkCollisions(); 
 
-        checkCollisions(); // Check the collisions 
+        // Finalize the update and animations
+        foreach (Species entity in allSpecies)
+        {
+            entity.update_physics();
+            entity.update_animations();
+            if (entity.animManager != null) entity.animManager.Update(gameTime);
+        }
 
-        player1.update_physics(); // set the final position, velocity, and acceleration of the player
-        //player2.update_physics(); 
-        enemy.update_physics();
-
-        player1.update_animations();// set the corresponding animation
-        //player2.update_player1Animations(); 
-        enemy.update_animations();
-
-        player1.animManager.Update(gameTime); // update the frame count for the animation
-        // player2.animManager.Update(gameTime); 
-        enemy.animManager.Update(gameTime);
-    
-        // player2.Update(gameTime);
+        camera.Update(gameTime, player1);
         
         base.Update(gameTime);
         
@@ -346,17 +389,19 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GraphicsDevice.Clear(Color.Black);
 
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: camera.transformation);
 
-        _spriteBatch.Draw(Background, new Rectangle(-100, -100, 1600, 1000), Color.White);
+        _spriteBatch.Draw(Background, new Rectangle(-100, -100, 1600*2, 1000*2), Color.White);
 
         DrawMap(gameTime);
 
-        player1.Draw(gameTime, _spriteBatch);
-        //player2.Draw(gameTime, _spriteBatch);
-        enemy.Draw(gameTime, _spriteBatch);
+        // Draw Game Objects
+        foreach (Species entity in allSpecies)
+        {
+            entity.Draw(gameTime, _spriteBatch);
+        }
 
         _spriteBatch.End();
 

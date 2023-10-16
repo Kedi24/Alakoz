@@ -28,7 +28,6 @@ namespace Alakoz.LivingBeings
         public SpriteEffects flip;
 
         // ------ MOVEMENT ------- //
-        public new Vector2 position;
         public Vector2 startPosiiton;
         public new Vector2 velocity;
         public float distance;
@@ -74,7 +73,6 @@ namespace Alakoz.LivingBeings
 		
 		// ------ COLLISION ------- //
 		public new enemyHurtbox hurtbox {get; set;}
-		public new List<CollisionObject> activeCollisions = new List<CollisionObject>();
 		public new Hitbox hitbox {get; set;}
 		public new Vector2 hitboxPosition = new Vector2(32f, 15f); // For the players attack, will change later
 		public new Vector2 KB; // The knockback from the hitbox that interescts the player
@@ -86,7 +84,6 @@ namespace Alakoz.LivingBeings
 
 		// ------ ANIMATION ------ //
 		public Dictionary<StateType, Animation> animations;
-		public AnimationManager animManager;
 		public StateType currentAnimation;
 		public StateType previousAnimation;
 		public StateType tempAnimation;
@@ -387,7 +384,7 @@ namespace Alakoz.LivingBeings
 
             hurtbox.update_Position(position);
 
-            if (position.Y >= 1000f || health == 0) 
+            if (position.Y >= 2000f || health == 0) 
 			{
 				position.Y = 0f;
 				position.X = 400f; 
@@ -439,7 +436,7 @@ namespace Alakoz.LivingBeings
 			hurtbox.Draw(gameTime, spritebatch, position, flip);
 		}
         
-        public virtual void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        public override void Draw(GameTime gameTime, SpriteBatch spriteBatch)
 		{
 
 			// Messages to display game / player information

@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.1" orientation="orthogonal" renderorder="right-down" width="32" height="23" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="21">
+<map version="1.10" tiledversion="1.10.1" orientation="orthogonal" renderorder="right-down" width="32" height="23" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="23">
  <tileset firstgid="1" source="Base Tileset.tsx"/>
- <objectgroup id="2" name="Collision Layer">
+ <objectgroup id="3" name="Dynamic Collisions">
+  <object id="21" x="448" y="480" width="32" height="32">
+   <properties>
+    <property name="aTYPE" value="ENEMYSPAWN"/>
+    <property name="bSpawnX" type="float" value="448"/>
+    <property name="cSpawnY" type="float" value="480"/>
+   </properties>
+  </object>
+  <object id="22" x="448" y="320" width="32" height="32">
+   <properties>
+    <property name="aTYPE" value="PLAYERSPAWN"/>
+    <property name="bSpawnX" type="float" value="448"/>
+    <property name="cSpawnY" type="float" value="320"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="2" name="Static Collisions">
   <object id="1" x="128" y="544" width="736" height="96">
    <properties>
     <property name="aTYPE" value="GROUND"/>
