@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -7,9 +9,8 @@ using Alakoz.Animate;
 using Alakoz.Input;
 using Alakoz.LivingBeings;
 using Alakoz.Collision;
+using Alakoz.GameInfo;
 
-
-using TiledCS;
 
 namespace Alakoz.LivingBeings
 {
@@ -32,12 +33,12 @@ namespace Alakoz.LivingBeings
 		public new Vector2 currPosition;
 		public new Vector2 nextPosition;
 
-		public new float gravity = 0.4f;
+		public new float gravity = 0.3f;
 		public new float speed = 2f; // Default speed
 		public new float airSpeed = 1f;
 		public new float fallSpeed = 1f;
 		public new float groundSpeed = 1f;
-		public new float velocityMax = 3f;
+		public new float velocityMax = 4f;
 		public new float terminalVelocity = 10f;
 		public new float accelMax = 10f;
 		public new float accelMin = 0.1f;
@@ -48,43 +49,64 @@ namespace Alakoz.LivingBeings
 		public new float groundAccel = 0.3f;
 		public new float groundDecel = 0.1f;
 
+		// ---- Moving
 		public new int direction = 1;
-		public new int numJumps = 1;
 		public new bool move_left = false;
 		public new bool move_right = false;
+		public new bool grounded = false;
+		
+		// ---- Jumping
 		public new bool jumping = false;
+		public new int numJumps = 1;
+		public bool softJumping = false;
+		public bool wallCollide = false; // Indicates a wall collision
+		public int wallBuffer = 0; // To prevent immediate wall interactions
+		public int walljumpCooldown = 0;
+		
+		// ---- Dashing
 		public new bool dashing = false;
-		public new bool attacking = false;
+		public new int numDashes = 1;
+		public new int dashCooldown = 15;
+		public float dashSpeed = 6f;
+
+		// ---- Crouching
 		public new bool crouching = false;
 
-		public new bool grounded = false;
-		public new bool hit = false;
+		// ---- Attacking
+		public new bool attacking = false;
 
-		public new int numDashes = 1;
-		public new int dashCooldown = 30;
+		// ---- Hit 
+		public new bool hit = false;
 		public new int hitstun = 0;
 		public new int health = 100;
+	
+		// ---- Interacting
+		public bool interacting = false;
+		public int interactCooldown = 0;
 
 		// ------ COLLISION ------ //
 		public new List<CollisionObject> activeCollisions = new List<CollisionObject>();
 		
-		public new Hurtbox hurtbox {get; set;}
+		// public new Hurtbox hurtbox {get; set;}
 		public new Hitbox hitbox {get; set;}
 		public new Hitbox hitbox2 {get; set;}
 		public new Hitbox hitbox3 {get; set;}
 		public new Vector2 hitboxPosition = new Vector2(32f, 15f); // For the players attack, will change later
 		public new Vector2 KB; // The knockback from the hitbox that interescts the player
 		public new bool applyKB = false;
-		float hurtboxWidth = 34;
-		float hurtboxHeight = 45;
+		public float hurtboxWidth = 34;
+		public float hurtboxHeight = 45;
 		public new bool hurtboxVisual = true;
 		Vector2 spriteCoordinate = new Vector2(-39, -36); // Placement of sprite in relation to the hurtbox. Calculated with aesprite
 
 
 		// ------ ANIMATION ------ //
-		public Dictionary<string, Animation> animDictionary;
+		public Dictionary<StateType, Animation> animations;
 		public AnimationManager animManager;
-		public string currentAnimation;
+		public StateType currentAnimation;
+		public StateType previousAnimation;
+		public StateType tempAnimation;
+		public ArrayList preAnimations;
 
 		// ------ SKILLS ------ //
 
@@ -100,41 +122,22 @@ namespace Alakoz.LivingBeings
 		public Controls controls;
 
 
-		// ##### States ##### // 
-		public new string currentState;
-		public new string previousState;
+		// ------ STATES ----- // 
+		public new StateType currentState;
+		public new StateType previousState;
 
-		public new const string IDLE = "idle";
-
-		public new const string JUMP = "jump";
-		public new const string AIR = "air";
-
-		public new const string RUN = "run";
-		public new const string RUN_END = "run_end";
-		public new const string TURNAROUND = "turnaround";
-		
-		public new const string CROUCH = "crouch";
-
-		public new const string DASH = "dash";
-
-		public new const string ATTACK = "attack";
-
-		public new const string HIT = "hit";
-
-		public new const string SKILL = "skill";
-
-		public Player(Dictionary<string, Animation> newSprites, Vector2 newPosition)
+		public Player(Dictionary<StateType, Animation> newSprites, Vector2 newPosition)
 		{
-			currentState = AIR;
+			currentState = StateType.AIR;
 
 			position = newPosition;
 
-			hurtbox = new Hurtbox(this, position, hurtboxWidth, hurtboxHeight, newSprites["Hurtbox"], true);
+			hurtbox = new Hurtbox(this, position, hurtboxWidth, hurtboxHeight, newSprites[StateType.HURTBOX], true);
 			
 			// Hitboxes just to test primitive attacks. Will modify later
-			hitbox = new Hitbox(position + hitboxPosition, 32f, 20f, 3, new Vector2(1f, 0f), 2, 10, newSprites["Hitbox"], true);
-			hitbox2 = new Hitbox(position + hitboxPosition, 32f, 30f, 3, new Vector2(1f, 0f), 5, 10, newSprites["Hitbox"], true);
-			hitbox3= new Hitbox(position + hitboxPosition, 32f, 40f, 3, new Vector2(5f, -5f), 10, 20, newSprites["Hitbox"], true);
+			hitbox = new Hitbox(position + hitboxPosition, 32f, 20f, 3, new Vector2(1f, 0f), 2, 10, newSprites[StateType.HITBOX], true);
+			hitbox2 = new Hitbox(position + hitboxPosition, 32f, 30f, 3, new Vector2(1f, 0f), 5, 10, newSprites[StateType.HITBOX], true);
+			hitbox3= new Hitbox(position + hitboxPosition, 32f, 40f, 3, new Vector2(5f, -5f), 10, 20, newSprites[StateType.HITBOX], true);
 			
 			hitbox.active = false;
 			hitbox2.active = false;
@@ -149,10 +152,11 @@ namespace Alakoz.LivingBeings
 			stateFrame = 0;
 			stateTimer = 0f;
 
-            animDictionary = newSprites;
-            animManager = new AnimationManager(newSprites["Base_Idle"], true);
+            animations = newSprites;
+            animManager = new AnimationManager(newSprites[StateType.FALL], true);
             animManager.Position = position;
-			currentAnimation = AIR;
+			currentAnimation = StateType.FALL;
+			preAnimations = new ArrayList();
 
             controls = new Controls();
 
@@ -160,10 +164,11 @@ namespace Alakoz.LivingBeings
 		}
 
 
-		// ========================================== PHYSICS FUNCTIONS ==========================================
+		// ========================================== PHYSICS ==========================================
 
 		// Physics functions for each possible movement. These function simply set the velocity values depending
 		// on player input and state
+		// ------------------------------ Basic
         private void move()
         {
             if (direction == 0) 
@@ -176,22 +181,30 @@ namespace Alakoz.LivingBeings
 				if (velocity.X < velocityMax) velocity.X += speed * acceleration;
 				else velocity.X = velocityMax;
 			}
-
         }
-        
+
 		private void jump()
         {
-			velocity.Y = -8.0f;
-			numJumps -= 1;
-			
-			if (numJumps < 0) numJumps = 0;
-			grounded = false;
+			if (stateFrame == 1)
+			{
+				velocity.Y = -8.0f;
+				numJumps -= 1;
+
+				// Prevent dash -> jump velocity from being transferred when high.
+				if (velocity.X > velocityMax) velocity.X = velocityMax;
+				else if (velocity.X < -velocityMax) velocity.X = -velocityMax;
+				
+				if (numJumps < 0) numJumps = 0;
+				grounded = false;
+			}
 		}
 		
 		private void fall()
 		{
 			if (velocity.Y < terminalVelocity) velocity.Y += fallSpeed * gravity;
 			else velocity.Y = terminalVelocity;
+
+			if (dashing) velocity.Y = 0;
 		}
 		
 		private void decelerate()
@@ -213,33 +226,37 @@ namespace Alakoz.LivingBeings
 				}
 			} else
 			{
-						if (velocity.X < 0) 
-						{
-							velocity.X += speed * deceleration;
-							if (velocity.X > 0 )velocity.X = 0;
-						}
-						else if (velocity.X > 0) 
-						{
-							velocity.X -= speed * deceleration;
-							if (velocity.X < 0 ) velocity.X = 0;
-						}
-						else velocity.X = 0;
+				if (velocity.X < 0) 
+				{
+					velocity.X += speed * deceleration;
+					if (velocity.X > 0 )velocity.X = 0;
+				}
+				else if (velocity.X > 0) 
+				{
+					velocity.X -= speed * deceleration;
+					if (velocity.X < 0 ) velocity.X = 0;
+				}
+				else velocity.X = 0;
 			}
 		}
 		
 		private void dash()
 		{
 		// dash physics
-			if (stateFrame >= 0 && stateFrame <= 3)
+			if (stateFrame == 4) 
 			{
-				// Console.WriteLine("StateFrame: " + stateFrame);
-				
-				velocity.X = 0.1f;
+				if (direction == 1) velocity.X = 20;
+				else velocity.X = -20;
+			}
+			else if (stateFrame == 5)
+			{
+				if (direction == 1) velocity.X = 6;
+				else velocity.X = -6;
 			}
 			else 
 			{
-				if (direction == 1) velocity.X = 6f;
-				else velocity.X = -6f;
+				if (direction == 1) velocity.X = dashSpeed;
+			 	else velocity.X = -dashSpeed;
 			}
 			velocity.Y = 0f;
 
@@ -294,7 +311,9 @@ namespace Alakoz.LivingBeings
 			else if (stateFrame == 25) 
 			{
 				attacking = false;
-				set_state(AIR);
+				set_state(StateType.AIR);
+				
+				tempAnimation = StateType.FALL;
 				air_state();
 			}
 			
@@ -314,7 +333,8 @@ namespace Alakoz.LivingBeings
 			else if (stateFrame == 22) 
 			{
 				attacking = false;
-				set_state(AIR);
+				set_state(StateType.AIR);
+				tempAnimation = StateType.FALL;
 				air_state();
 			}
 			
@@ -334,7 +354,8 @@ namespace Alakoz.LivingBeings
 			else if (stateFrame == 22) 
 			{
 				attacking = false;
-				set_state(AIR);
+				set_state(StateType.AIR);
+				tempAnimation = StateType.FALL;
 				air_state();
 			}
 			
@@ -354,10 +375,28 @@ namespace Alakoz.LivingBeings
 			else if (stateFrame == 22) 
 			{
 				attacking = false;
-				set_state(AIR);
+				set_state(StateType.AIR);
+				tempAnimation = StateType.FALL;
 				air_state();
 			}
 			
+		}
+		
+		//------------------------------ Unique
+		private void walljump() 
+		{
+			// Physics
+			velocity.Y = -7.0f;
+			if (direction == 0) velocity.X = 7f;
+			else velocity.X = -7f;
+
+			// Booleans
+			walljumpCooldown = 20;
+			jumping = false;
+		
+			// Animation
+			preAnimations = new ArrayList(){StateType.BALLEND, StateType.BALL, StateType.BALLSTART};
+			set_preAnimations(); // state doesnt change, modify animations in isolation
 		}
 		
 		
@@ -369,27 +408,35 @@ namespace Alakoz.LivingBeings
 		{
 			if (grounded)
 			{
-				set_state(IDLE);
 				velocity.Y = 0;
+				preAnimations = new ArrayList(){StateType.CROUCHEND};
+				tempAnimation = StateType.IDLE;
+				set_state(StateType.IDLE);
 				idle_state();
 			}
-			else if (jumping) 
+			else if (wallCollide && softJumping && wallBuffer == 0) { walljump(); }
+			else if (jumping && walljumpCooldown == 0) 
 			{
-				set_state(JUMP);
-				jump_state();
+					preAnimations = new ArrayList(){StateType.JUMPSTART};
+					set_state(StateType.JUMP);
+					tempAnimation = StateType.JUMP;
+					jump_state();
 			}
 			else if (dashing) 
 			{
-				set_state(DASH);
+				preAnimations = new ArrayList(){StateType.DASHSTART};
+				tempAnimation = StateType.DASH;
+				set_state(StateType.DASH);
 				dash_state();
 			}
 			else if (attacking)
 			{
-				set_state(ATTACK);
+				set_state(StateType.ATTACK);
 				attack_state();
 			}
 			else
 			{
+				tempAnimation = StateType.FALL;
 				if (move_left) 
 				{
 					direction = 0;
@@ -400,116 +447,157 @@ namespace Alakoz.LivingBeings
 					direction = 1;
 					move();
 				}
-			}
-			
+			}	
 		}
 		
 		public void idle_state()
 		{
 			if (!grounded)
 			{
-				set_state(AIR);
+				tempAnimation = StateType.FALL;
+				set_state(StateType.AIR);
 				air_state();
 			}
 			else if (jumping) 
 			{
 				grounded = false;
-				set_state(JUMP);
+				set_state(StateType.JUMP);
+				preAnimations = new ArrayList(){StateType.JUMPSTART};
+				tempAnimation = StateType.JUMP;
 				jump_state();
 			}
 			else if (move_left) 
 			{
 				direction = 0;
-				set_state(RUN);
+				set_state(StateType.RUN);
+				tempAnimation = StateType.RUN;
 				move();
 			}
 			else if (move_right)
 			{
 				direction = 1;
-				set_state(RUN);
+				set_state(StateType.RUN);
+				tempAnimation = StateType.RUN;
 				move();
+			}
+			else if (crouching)
+			{
+				preAnimations = new ArrayList(){StateType.CROUCHSTART};
+				tempAnimation = StateType.CROUCH;
+
+				hurtbox.changeDimensions(new Vector2(0, hurtbox.height / 2), 34, 22);
+				set_state(StateType.CROUCH);
+				crouch_state();
 			}
 			else if (dashing) 
 			{
-				set_state(DASH);
+				preAnimations = new ArrayList(){StateType.DASHSTART};
+				tempAnimation = StateType.DASH;
+				set_state(StateType.DASH);
 				dash_state();
 			}
 			else if (attacking)
 			{
-				set_state(ATTACK);
+				set_state(StateType.ATTACK);
 				attack_state();
+			} 
+			else 
+			{
+				tempAnimation = StateType.IDLE;
 			}
 		}
 		
 		public void jump_state()
 		{	
-			if (stateFrame == 9)
+			if (velocity.Y < 0.5 && velocity.Y > -0.5 && stateFrame > 1) // fix later
 			{
 				jumping = false;
-				set_state(AIR);
+				preAnimations = new ArrayList{ StateType.BALLEND, StateType.BALL, StateType.BALLSTART };
+				tempAnimation = StateType.FALL;
+				set_state(StateType.AIR);
 				air_state();
 				return;
 			}
-			else if (grounded)
+			else if (grounded && stateFrame > 1) // To prevent jump -> idle -> jump... loop 
 			{
 				jumping = false;
 				velocity.Y = 0;
-				set_state(IDLE);
+				preAnimations = new ArrayList{ StateType.CROUCHEND};
+				tempAnimation = StateType.IDLE;
+				set_state(StateType.IDLE);
 				idle_state();
 			}
 			else if (dashing) 
 			{
 				jumping = false;
-				set_state(DASH);
+				preAnimations = new ArrayList(){StateType.DASHSTART};
+				tempAnimation = StateType.DASH;
+				set_state(StateType.DASH);
 				dash_state();
 			} 
 			else if (attacking)
 			{
-				set_state(ATTACK);
+				set_state(StateType.ATTACK);
 				attack_state();
 			}
+			else if (wallCollide && softJumping && wallBuffer == 0) { walljump(); }
 			else 
 			{
-				if (move_left || move_right) move();
-				if (stateFrame == 0) jump();
+				tempAnimation = StateType.JUMP;
+				if (move_left) 
+				{
+					direction = 0;
+					move();
+					
+				}
+				else if (move_right)
+				{
+					direction = 1;
+					move();
+				}
+				jump();
 			}
 		}
 		
 		public void run_state()
 		{
-			currentAnimation = RUN;
+			tempAnimation = StateType.RUN;
+			
 			if (!grounded)
 			{
-				set_state(AIR);
+				preAnimations = new ArrayList(){StateType.BALLEND, StateType.BALL, StateType.BALLSTART};
+				tempAnimation = StateType.FALL;
+				set_state(StateType.AIR);
 				air_state();
 			}
 			else if (jumping) 
 			{
 				grounded = false;
-				set_state(JUMP);
+				preAnimations = new ArrayList(){StateType.JUMPSTART};
+				tempAnimation = StateType.JUMP;
+				set_state(StateType.JUMP);
 				jump_state();
 			}
 			else if (dashing) 
 			{
-				set_state(DASH);
+				preAnimations = new ArrayList(){StateType.DASHSTART};
+				tempAnimation = StateType.DASH;
+				set_state(StateType.DASH);
 				dash_state();
 			}
 			else if (attacking)
 			{
-				set_state(ATTACK);
+				set_state(StateType.ATTACK);
 				attack_state();
 			} 
 			else
 			{
 				if (!(move_left || move_right))
 				{
-					currentAnimation = RUN_END;
-					if (animManager.isDone) 
-					{
-						currentAnimation = IDLE;
-						set_state(IDLE);
-						idle_state();
-					}
+					if (velocity.X > 2.5 || velocity.X < -2.5) preAnimations = new ArrayList{ StateType.RUNEND };
+					tempAnimation = StateType.IDLE;
+					set_state(StateType.IDLE);
+					idle_state();
 					return;
 				} else if (move_left) 
 				{
@@ -524,33 +612,90 @@ namespace Alakoz.LivingBeings
 			}
 		}
 		
+		public void crouch_state()
+		{
+			if (!grounded)
+			{
+				tempAnimation = StateType.FALL;
+				preAnimations = new ArrayList(){StateType.BALLEND, StateType.BALL, StateType.BALLSTART};
+				// Update the hurtbox
+				hurtbox.resetDimensions();
+				set_state(StateType.AIR);
+				air_state();
+			} 
+			else if (!crouching)
+			{
+				preAnimations = new ArrayList(){StateType.CROUCHEND};
+				tempAnimation = StateType.IDLE;
+				// Update the hurtbox
+				hurtbox.resetDimensions();
+				set_state(StateType.IDLE);
+				idle_state();
+			}
+			else if (jumping)
+			{
+				tempAnimation = StateType.JUMP;
+				preAnimations = new ArrayList(){StateType.JUMPSTART};
+				// Update the hurtbox
+				hurtbox.resetDimensions();
+				set_state(StateType.JUMP);
+				jump_state();	
+			}
+			else if (dashing)
+			{
+				preAnimations = new ArrayList(){StateType.DASHSTART};
+				tempAnimation = StateType.DASH;
+				// Update the hurtbox
+				hurtbox.resetDimensions();
+				set_state(StateType.DASH);
+				dash_state();
+			}
+			else if (move_left || move_right)
+			{
+				tempAnimation = StateType.RUN;
+				// Update the hurtbox
+				hurtbox.resetDimensions();
+				set_state(StateType.RUN);
+				run_state();
+			}
+			else
+			{
+				// if (stateFrame == 0) hurtbox.changeDimensions(new Vector2(hurtbox.width / 2, hurtbox.height / 2), 34, 22);
+			}
+		}
+
 		public void dash_state()
 		{
-			if (stateFrame == 10) // State ends
+			if (stateFrame == 12) // State ends
 			{
 				dashing = false;
-				dashCooldown = 30;
+				dashCooldown = 15;
+				
+				// Update the Animations
+				preAnimations = new ArrayList(){StateType.DASHEND};
+				tempAnimation = StateType.FALL;
 
-				set_state(AIR);
+				set_state(StateType.AIR);
 				air_state();
 				return;
 			}
 			else if (jumping)
 			{
-				//cancel the dash input with jump
+				// Jump Cancel
 				dashing = false;
 				dashCooldown = 15;
-				set_state(JUMP);
+				tempAnimation = StateType.JUMP;
+				set_state(StateType.JUMP);
 				jump_state();
 			}
 			else if (attacking)
 			{
-				set_state(ATTACK);
+				set_state(StateType.ATTACK);
 				attack_state();
 			}
-			else // now for the states
+			else
 			{
-				dash();
+				dash();	
 			}
 
 		}
@@ -560,7 +705,8 @@ namespace Alakoz.LivingBeings
 			if (hitstun == 0) 
 			{
 				hit = false;
-				set_state(AIR);
+				tempAnimation = StateType.FALL;
+				set_state(StateType.AIR);
 				air_state();
 				return;
 			}
@@ -572,7 +718,15 @@ namespace Alakoz.LivingBeings
 				crouching = false;
 				dashing = false;
 
-				if (applyKB) knockback();
+				if (applyKB) 
+				{
+					if (tempAnimation == currentAnimation)  // To make sure the impact frames play when hit again DURING hitstun
+					{
+						preAnimations = new ArrayList(){StateType.HITSTART};
+						set_preAnimations();
+					}
+					knockback();
+				}
 			}
 		}
 
@@ -588,7 +742,8 @@ namespace Alakoz.LivingBeings
 		}
 
 		
-		// ========================================== SETTING FUNCTIONS ==========================================
+		
+		// ========================================== SETTERS ==========================================
 		
 		// Sets the current and previous position AFTER player input but BEFORE collision handling.
 		public void set_positions()
@@ -609,22 +764,22 @@ namespace Alakoz.LivingBeings
 			// need to make sure grounded is set to false AFTER this function is called
 			switch (previousState)
 			{
-				case AIR:
+				case StateType.AIR:
 					airAttack();
 					break;
-				case JUMP:
+				case StateType.JUMP:
 					airAttack();
 					break;
-				case IDLE:
+				case StateType.IDLE:
 					groundAttack();
 					break;
-				case RUN:
+				case StateType.RUN:
 					groundAttack();
 					break;
-				case DASH:
+				case StateType.DASH:
 					dashAttack();
 					break;
-				case CROUCH:
+				case StateType.CROUCH:
 					crouchAttack();
 					break;
 			}
@@ -632,7 +787,7 @@ namespace Alakoz.LivingBeings
 
 		/// Changes the players current state, setting it to <param name="newState"> while recording the previous state.
 		/// Also resets the stateFrame count.
-        public void set_state(string newState)
+        public void set_state(StateType newState)
         {
 			if (currentState != newState)
 			{
@@ -640,9 +795,23 @@ namespace Alakoz.LivingBeings
 				stateFrame = 0;
 			}
             currentState = newState;
-			currentAnimation = currentState; // Set the current animation to play
         }
 		
+		/// Play a set of non looping animations. This functions keeps the base looping animations the same
+		public void set_preAnimations()
+		{
+			animManager.Clear(); // Empty the stack for new animations
+			animManager.Add( animations[currentAnimation] ); // Add the current state animation to the bottom of the stack
+
+			for (int i = 0; i < preAnimations.Count; i++) // add the transitional animations
+			{ 
+				if (preAnimations.Count == 0) break;
+				animManager.Add( animations[ (StateType) preAnimations[i]] ); 
+			}
+			animManager.Play(); // Pop and play the animation at the top of the stack
+
+			preAnimations.Clear(); // Clear remaining pre-animations for next game tick
+		}
 		
 		// ========================================== UPDATING ==========================================
 		
@@ -688,8 +857,11 @@ namespace Alakoz.LivingBeings
 				move_right = false;
 				move_left = false;
 			}
+			// Just for walljumping 
+			if (controls.isDown(controls.Jump)) softJumping = true;
+			else softJumping = false;
+			
 
-			// Jump
 			if (controls.isDown(controls.Jump) && numJumps > 0) jumping = true;
 
 			// Crouch
@@ -702,38 +874,49 @@ namespace Alakoz.LivingBeings
 			// Attack
 			if (controls.isDown(controls.Attack)) attacking = true;
 
+			// // Map Interactions
+			// if (controls.isDown(controls.Interact) && interactCooldown == 0) interacting = true;
+			// else interacting = false;
+
 		}
 
 		// Update the players state, and set the values for the physics to be applied
 		public override void update_state()
 		{
 			if (hit) 
-			{
-				set_state(HIT);
+			{	
+				preAnimations = new ArrayList(){StateType.HITSTART};
+				tempAnimation = StateType.HIT;
+				set_state(StateType.HIT);
 				hit_state();			
 			}
 			switch (currentState)
 			{
-				case AIR:
+				case StateType.AIR:
 					air_state();
 					break;
-				case IDLE:
+				case StateType.IDLE:
 					idle_state();
 					break;
-				case JUMP:
+				case StateType.JUMP:
 					jump_state();
 					break;
-				case RUN:
+				case StateType.CROUCH:
+					crouch_state();
+					break;
+				case StateType.RUN:
 					run_state();
 					break;
-				case DASH:
+				case StateType.DASH:
 					dash_state();
 					break;
-				case ATTACK:
+				case StateType.ATTACK:
 					attack_state();
 					break;
+				
 			}
 			grounded = false;
+			wallCollide = false;
 			decelerate();
 			fall();
 			set_positions(); // Update the "position to be drawn" of the player
@@ -777,7 +960,7 @@ namespace Alakoz.LivingBeings
 		// Modify the players cooldowns depending on the time
 		public void update_cooldowns()
 		{
-			// -------- Hitstun
+						// -------- Hitstun
 			if (hit && hitstun > 0) hitstun -= 1;
 			else 
 			{
@@ -795,66 +978,56 @@ namespace Alakoz.LivingBeings
 				dashCooldown = 0;
 			 	numDashes = 1;
 			}
+			// -------- Wall Jump
+			if (!wallCollide || grounded) wallBuffer = 7; // to prevent instant wall jumps
+			else 
+			{
+				if (wallBuffer <= 0) wallBuffer = 0;
+				else wallBuffer -= 1;				
+			}
+
+			if (walljumpCooldown > 0) // to prevent burning your jump
+			{
+				walljumpCooldown -= 1;
+				jumping = false;
+			}
+			else walljumpCooldown = 0;
 
 			// -------- Health
 			if (health < 0) health = 0;
+
+			// // -------- Interact
+			// if (interactCooldown > 0) interactCooldown -= 1;
+			// else if (interactCooldown < 0) interactCooldown = 0;
 		}
 	
 		// Updating the current animation to be played
 		public override void update_animations()
 		{
-            switch (currentAnimation)
-            {
-                case IDLE:
-					animManager.Play(animDictionary["Base_Idle"]);
-                    break;
-                case AIR:
-                    animManager.Play(animDictionary["Base_Falling"]);
-                    break;
-				case JUMP:
-					animManager.Play(animDictionary["Base_Jump"]);
-					break;
-                case RUN:
-                    animManager.Play(animDictionary["Base_Running"]);
-                    break;
-                case RUN_END:
-                    animManager.Play(animDictionary["Base_RunStop"]);
-                    break;
-                case TURNAROUND:
-                    animManager.Play(animDictionary["Base_Turnaround"]);
-                    break;
-                case CROUCH:
-                    animManager.Play(animDictionary["ball"]); 
-                    break;
-				case DASH:
-					animManager.Play(animDictionary["ball"]);
-					break;
-                case ATTACK:
-                    animManager.Play(animDictionary["ball"]);
-                    break;
-				case HIT:
-					animManager.Play(animDictionary["ball"]); 
-					break;
-                default:
-                    break;
-            }
+			// Set the main animation to play
+			if (currentAnimation != tempAnimation) 
+			{
+				previousAnimation = currentAnimation;
+				currentAnimation = tempAnimation;
+				set_preAnimations();
+			}	
         }
 
 		
 
 		// Old function, will modify later
-        public virtual void Update(GameTime gameTime)
-        {
-			// update_test();
-			update_physics(); // set the final position, velocity, and acceleration of the player
-			hurtbox.Update(gameTime);
-			update_time(gameTime); // update the frame count for the state
-			update_animations(); // set the corresponding animation
-			animManager.Update(gameTime); // update the frame count for the animation
-        }
+        // public virtual void Update(GameTime gameTime)
+        // {
+		// 	// update_test();
+		// 	update_physics(); // set the final position, velocity, and acceleration of the player
+		// 	hurtbox.Update(gameTime);
+		// 	update_time(gameTime); // update the frame count for the state
+		// 	update_animations(); // set the corresponding animation
+		// 	animManager.Update(gameTime); // update the frame count for the animation
+        // }
 
 
-// ========================================== DRAWING ==========================================
+		// ========================================== DRAWING ==========================================
 		public void DrawPlayer(GameTime gameTime, SpriteBatch spritebatch)
 		{
 			// Draw player animation
@@ -875,13 +1048,16 @@ namespace Alakoz.LivingBeings
 			// Messages to display game / player information
 			stateMSG = "Current State: " + currentState 
 			+ "\nPrevious State: " + previousState
-			+ "\nFrame Time (24FPS): " + stateFrame + " Frames" 
-			+ "\nGrounded: " + grounded.ToString()
-			+ "\nCooldown: " + dashCooldown
+			+ "\nState Time (24FPS): " + stateFrame
+			+ "\nAnimation: " + currentAnimation
+			+ "\nDash Cooldown: " + dashCooldown
+			+ "\nWalljump Cooldown: " + walljumpCooldown
+			+ "\nWallBuffer: " + wallBuffer
 			+ "\nHealth: " + health
 			+ "\nHitstun: " + hitstun;
 			
 			movementMSG = "Position: " + position.ToString() 
+			+ "\nHurtbox: " + hurtbox.position.ToString()
 			+ "\nVelocity: " + velocity.ToString()
             + "\nAcceleration: " + acceleration.ToString() 
 			+ "\nDirection: " + direction.ToString()
@@ -896,12 +1072,17 @@ namespace Alakoz.LivingBeings
 			+ "\nGrounded = " + grounded
 			+ "\nAttacking = " + attacking
 			+ "\nHit = " + hit
+			+ "\nWall = " + wallCollide
 			+ "\nIgnore Size: " + hitbox.ignoreObjects.Count;
 			DrawPlayer(gameTime, spriteBatch);
 
             // spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(800f, 400), Color.DarkRed);
             // spriteBatch.DrawString(stateFONT, stateMSG, new Vector2(5f, 415), Color.Gold);
 			// spriteBatch.DrawString(stateFONT, inputMSG, new Vector2(5f, 550), Color.Orange);
+
+            // spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(hurtboxWidth+ 20, -100) + position, Color.GreenYellow, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
+            // spriteBatch.DrawString(stateFONT, stateMSG, new Vector2(-39, -120) + position, Color.Gold, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
+			// spriteBatch.DrawString(stateFONT, inputMSG, new Vector2(-39, hurtboxHeight) + position, Color.Blue, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
 
 			
         }

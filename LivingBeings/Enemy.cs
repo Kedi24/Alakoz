@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -7,6 +8,7 @@ using Alakoz.Animate;
 using Alakoz.Input;
 using Alakoz.LivingBeings;
 using Alakoz.Collision;
+using Alakoz.GameInfo;
 
 using TiledCS;
 
@@ -23,8 +25,6 @@ namespace Alakoz.LivingBeings
 		public const float FPS24 = AnimationManager.FPS24;
 
 		public string movementMSG = "";
-        public AnimationManager animManager;
-        public Dictionary<string, Animation> animDictionary;
         public SpriteEffects flip;
 
         // ------ MOVEMENT ------- //
@@ -70,12 +70,11 @@ namespace Alakoz.LivingBeings
 		public new int dashCooldown;
 		public new int hitstun;
 		public new int health;
-
-		public new List<CollisionObject> activeCollisions = new List<CollisionObject>();
+		
 		
 		// ------ COLLISION ------- //
-
 		public new enemyHurtbox hurtbox {get; set;}
+		public new List<CollisionObject> activeCollisions = new List<CollisionObject>();
 		public new Hitbox hitbox {get; set;}
 		public new Vector2 hitboxPosition = new Vector2(32f, 15f); // For the players attack, will change later
 		public new Vector2 KB; // The knockback from the hitbox that interescts the player
@@ -85,39 +84,33 @@ namespace Alakoz.LivingBeings
 		public new bool hurtboxVisual = true;
 		Vector2 spriteCoordinate = new Vector2(-39, -36); // Placement of sprite in relation to the hurtbox. Calculated with aesprite
 
+		// ------ ANIMATION ------ //
+		public Dictionary<StateType, Animation> animations;
+		public AnimationManager animManager;
+		public StateType currentAnimation;
+		public StateType previousAnimation;
+		public StateType tempAnimation;
+		public ArrayList preAnimations;
+
 		// ------ STATES ------- //
-		public new string currentState;
-		public new string previousState;
+		public new StateType currentState;
+		public new StateType previousState;
 
-		public new const string IDLE = "idle";
 
-		public new const string JUMP = "jump";
-		public new const string AIR = "air";
-
-		public new const string RUN = "run";
-		public new const string RUN_END = "run_end";
-		public new const string TURNAROUND = "turnaround";
-		
-		public new const string CROUCH = "crouch";
-
-		public new const string DASH = "dash";
-
-		public new const string ATTACK = "attack";
-
-		public new const string HIT = "hit";
-
-		public new const string SKILL = "skill";
-		public Enemy(Dictionary<string, Animation> newSprites ,Vector2 newPosition)
+		public Enemy(Dictionary<StateType, Animation> newSprites ,Vector2 newPosition)
 		{
             position = newPosition;
             startPosiiton = newPosition;
-            hurtbox = new enemyHurtbox(this, position, hurtboxWidth, hurtboxHeight, newSprites["Hurtbox"], true);
+            hurtbox = new enemyHurtbox(this, position, hurtboxWidth, hurtboxHeight, newSprites[StateType.HURTBOX], true);
             speed = 2f;
+			distance = 0f;
             distanceTraveled = 100f;
 
-            animDictionary = newSprites;
-            animManager = new AnimationManager(newSprites["ball"], true);
+            animations = newSprites;
+            animManager = new AnimationManager(newSprites[StateType.FALL], true);
             animManager.Position = position;
+			currentAnimation = StateType.FALL;
+			preAnimations = new ArrayList();
 
 			activeCollisions.Add(hurtbox);
             flip = SpriteEffects.None;
@@ -128,7 +121,162 @@ namespace Alakoz.LivingBeings
 			enemyHitbox.active = true;
 			return enemyHitbox;
 		}
-        public void set_positions()
+		// ========================================== PHYSICS ==========================================
+
+		// Physics functions for each possible movement. These function simply set the velocity values depending
+		// on player input and state
+		private void move()
+        {
+            if (direction == 0) 
+			{
+                if (velocity.X > -velocityMax) velocity.X -= speed * acceleration;
+                else velocity.X = -velocityMax;
+                
+				distance -= velocity.X;
+            }
+            else if (direction == 1) 
+			{
+                if (velocity.X < velocityMax) velocity.X += speed * acceleration;
+                else velocity.X = velocityMax;
+                
+				distance += velocity.X;
+            }
+		}
+		private void switchDirection()
+		{
+			if (direction == 0) direction = 1;
+			else direction = 0;
+			distance = 0;
+			switchero = false;
+		}
+		private void jump()
+        {
+		    throw new NotImplementedException();
+		}
+		private void fall()
+		{
+            if (velocity.Y < terminalVelocity) velocity.Y += fallSpeed * gravity;
+            else velocity.Y = terminalVelocity;
+		}
+		private void decelerate()
+		{
+			if (!hit)
+			{
+				if (!(move_left || move_right))
+				{
+					if (direction == 0) 
+					{
+						if (velocity.X < 0) velocity.X += speed * deceleration;
+						else velocity.X = 0;
+					}
+					else if (direction == 1) 
+					{
+						if (velocity.X > 0) velocity.X -= speed * deceleration;
+						else velocity.X = 0;
+					}
+				}
+			} else
+			{
+				if (velocity.X < 0) 
+				{
+					velocity.X += speed * deceleration;
+					if (velocity.X > 0 )velocity.X = 0;
+				}
+				else if (velocity.X > 0) 
+				{
+					velocity.X -= speed * deceleration;
+					if (velocity.X < 0 ) velocity.X = 0;
+				}
+				else velocity.X = 0;
+			}
+		}
+		private void knockback()
+		{
+            velocity.X = KB.X;
+			velocity.Y = KB.Y;
+			applyKB = false;
+		} 
+		
+		// ========================================== STATES ==========================================
+		public void air_state()
+		{
+           	if (grounded)
+			{
+				velocity.Y = 0;
+				tempAnimation = StateType.IDLE;
+				
+				set_state(StateType.IDLE);
+				idle_state();
+			}
+			else tempAnimation = StateType.FALL;
+		}
+		
+		public void idle_state()
+		{
+            if (!grounded)
+			{
+				set_state(StateType.AIR);
+				tempAnimation = StateType.FALL;
+				air_state();
+			}
+			else 
+			{
+				tempAnimation = StateType.RUN;
+				set_state(StateType.RUN);
+				run_state();
+			}
+		}
+		
+		public void run_state()
+		{
+            if (!grounded)
+			{
+				tempAnimation = StateType.FALL;
+				set_state(StateType.AIR);
+				air_state();
+			}
+			else
+			{
+				tempAnimation = StateType.RUN;
+				         
+				// Swap directions when max distance has been reached
+				if (switchero) switchDirection(); 
+				move();
+			}
+		}
+		
+		public void hit_state()
+		{
+            if (hitstun == 0) 
+			{
+				hit = false;
+				tempAnimation = StateType.FALL;
+				set_state(StateType.AIR);
+				air_state();
+				return;
+			}
+			else
+			{
+				move_left = false;
+				move_right = false;
+				jumping = false;
+				crouching = false;
+
+				if (applyKB) 
+				{
+					if (tempAnimation == currentAnimation)  // To make sure the impact frames play when hit again DURING hitstun
+					{
+						preAnimations = new ArrayList(){StateType.SYMBOL};
+						set_preAnimations();
+					}
+					knockback();
+				}
+			}
+		}
+
+		// ========================================== SETTERS ==========================================
+        // Set the current and next positions based on velocity for collision checks
+		public void set_positions()
 		{
 			currPosition = position;
 
@@ -138,7 +286,36 @@ namespace Alakoz.LivingBeings
             nextPosition.X = position.X + tempVelocityX;
             nextPosition.Y = position.Y + tempVelocityY;
 		}
+       
+		/// Changes the enemies current state, setting it to <param name="newState"> while recording the previous state.
+		/// Also resets the stateFrame count.
+        public void set_state(StateType newState)
+        {
+			if (currentState != newState)
+			{
+				previousState = currentState; 
+				stateFrame = 0;
+			}
+            currentState = newState;
+        }
+		
+		/// Play a set of non looping animations. This functions keeps the base looping animations the same
+		public void set_preAnimations()
+		{
+			animManager.Clear(); // Empty the stack for new animations
+			animManager.Add( animations[currentAnimation] ); // Add the current state animation to the bottom of the stack
 
+			for (int i = 0; i < preAnimations.Count; i++) // add the transitional animations
+			{ 
+				if (preAnimations.Count == 0) break;
+				animManager.Add( animations[ (StateType) preAnimations[i]] ); 
+			}
+			animManager.Play(); // Pop and play the animation at the top of the stack
+
+			preAnimations.Clear(); // Clear remaining pre-animations for next game tick
+		}
+			   
+		// ========================================== UPDATING ==========================================
         public override void update_time(GameTime gameTime)
         {
             stateTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -149,92 +326,65 @@ namespace Alakoz.LivingBeings
             }
 			if (stateFrame >= 240) stateFrame = 0;
         }
-
-        private void move()
+		
+		public override void update_input()
         {
-            if (direction == 0) 
+			if (Math.Abs(distance) >= distanceTraveled) switchero = true;
+			else switchero = false;
+
+			if (grounded)
 			{
-                if (velocity.X > -velocityMax) {
-                    velocity.X -= speed * acceleration;
-                }
-                else velocity.X = -velocityMax;
-                distance -= velocity.X;
-            }
-            else if (direction == 1) 
+				if (direction == 0)
+				{	
+					move_left = true; 
+					move_right = false;
+				} else
+				{
+					move_left = false; 
+					move_right = true;;
+				}
+			} else 
 			{
-                if (velocity.X < velocityMax) {
-                    velocity.X += speed * acceleration;
-                } 
-                else velocity.X = velocityMax;
-                distance += velocity.X;
-            }
-            // Console.Write("Distance: " + distance);
-            if (Math.Abs(distance) >= distanceTraveled && switchero) {
-                if (direction == 0) direction = 1;
-                else if (direction == 1) direction = 0;
-                distance = 0;
-				switchero = false;
-            }
-			else if (Math.Abs(distance) <= 2) switchero = true;
-        }
-		private void jump()
-        {
-		    throw new NotImplementedException();
-		}
-		
-		private void fall()
-		{
-            if (velocity.Y < terminalVelocity) velocity.Y += fallSpeed * gravity;
-            else velocity.Y = terminalVelocity;
-		}
-		
-		private void decelerate()
-		{
-            throw new NotImplementedException();
-		}
-		
-		private void knockback()
-		{
-            throw new NotImplementedException();
-		} 
-
-		public void air_state()
-		{
-            throw new NotImplementedException();
-		}
-		
-		public void idle_state()
-		{
-            throw new NotImplementedException();
-		}
-		
-		public void run_state()
-		{
-            throw new NotImplementedException();
-		}
-		
-		public void hit_state()
-		{
-            throw new NotImplementedException();
-		}
-
-        public override void update_input()
-        {
-            throw new NotImplementedException();
+				move_left = false; 
+				move_right = false;
+			}
         }
 
         public override void update_state()
         {   
-            if (grounded) move();
-            fall();
-            set_positions();
+            if (hit) 
+			{	
+				tempAnimation = StateType.SYMBOL;
+				set_state(StateType.HIT);
+				hit_state();			
+			}
+			switch (currentState)
+			{
+				case StateType.AIR:
+					air_state();
+					break;
+				case StateType.IDLE:
+					idle_state();
+					break;
+				case StateType.RUN:
+					run_state();
+					break;
+			}
+			grounded = false;
+			decelerate();
+			fall();
+			set_positions(); // Update the "position to be drawn" of the player
         }
 
         public override void update_physics()
         {
+			// Flipping
+            if (direction == 0) flip = SpriteEffects.FlipHorizontally;
+            else if (direction == 1) flip = SpriteEffects.None;
+
             position.Y += velocity.Y ;
             position.X += velocity.X ;
-            // Console.WriteLine("Velocity: " + velocity);
+
             hurtbox.update_Position(position);
 
             if (position.Y >= 1000f || health == 0) 
@@ -245,12 +395,32 @@ namespace Alakoz.LivingBeings
 				acceleration = 0f;
 				health = 100;
 			}
+			update_cooldowns();
 
         }
 
-        public override void update_animations()
+		public void update_cooldowns()
+		{
+			// -------- Hitstun
+			if (hit && hitstun > 0) hitstun -= 1;
+			else 
+			{
+				hitstun = 0;
+				hit = false;
+			}
+			// -------- Health
+			if (health < 0) health = 0;
+		}
+        
+		public override void update_animations()
         {
-            throw new NotImplementedException();
+			// Set the main animation to play
+			if (currentAnimation != tempAnimation) 
+			{
+				previousAnimation = currentAnimation;
+				currentAnimation = tempAnimation;
+				set_preAnimations();
+			}	
         }
         
         public void Update(GameTime gameTime) { 
@@ -259,6 +429,7 @@ namespace Alakoz.LivingBeings
             update_time(gameTime);
         }
 
+		// ========================================== DRAWING ==========================================
 		public void DrawEnemy(GameTime gameTime, SpriteBatch spritebatch)
 		{
 			// Draw enemy animation
@@ -271,31 +442,31 @@ namespace Alakoz.LivingBeings
         public virtual void Draw(GameTime gameTime, SpriteBatch spriteBatch)
 		{
 
-			// // Messages to display game / player information
-			// stateMSG = "Current State: " + currentState 
-			// + "\nPrevious State: " + previousState
-			// + "\nFrame Time (24FPS): " + stateFrame + " Frames" 
-			// + "\nGrounded: " + grounded.ToString()
-			// + "\nCooldown: " + dashCooldown
-			// + "\nHealth: " + health
-			// + "\nHitstun: " + hitstun;
+			// Messages to display game / player information
+			stateMSG = "Current State: " + currentState 
+			+ "\nPrevious State: " + previousState
+			+ "\nState Time (24FPS): " + stateFrame
+			+ "\nAnimation: " + currentAnimation
+			+ "\nHealth: " + health
+			+ "\nHitstun: " + hitstun;
 			
-			// movementMSG = "Position: " + position.ToString() 
-			// + "\nVelocity: " + velocity.ToString()
-            // + "\nAcceleration: " + acceleration.ToString() 
-			// + "\nDirection: " + direction.ToString()
-			// + "\nGravity: " + gravity.ToString();
+			movementMSG = "Position: " + position.ToString() 
+			+ "\nHurtbox: " + hurtbox.position.ToString()
+			+ "\nVelocity: " + velocity.ToString()
+            + "\nAcceleration: " + acceleration.ToString() 
+			+ "\nDirection: " + direction.ToString()
+			+ "\nDistance: " + distance.ToString()
+			+ "\nTraveled: " + distanceTraveled.ToString()
+			+ "\nGravity: " + gravity.ToString();
 			
-			// string inputMSG = 
-			// "Left = " + move_left.ToString() 
-			// + "\nRight = " + move_right.ToString()
-			// + "\nJumping = " + jumping
-			// + "\nDashing = " + dashing
-			// + "\nCrouching = " + crouching
-			// + "\nGrounded = " + grounded
-			// + "\nAttacking = " + attacking
-			// + "\nHit = " + hit
-			// + "\nIgnore Size: " + hitbox.ignoreObjects.Count;
+			string inputMSG = 
+			"Left = " + move_left
+			+ "\nRight = " + move_right
+			+ "\nJumping = " + jumping
+			+ "\nSwitching = " + switchero
+			+ "\nGrounded = " + grounded
+			+ "\nAttacking = " + attacking
+			+ "\nHit = " + hit;
 			DrawEnemy(gameTime, spriteBatch);
 
             // spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(800f, 400), Color.DarkRed);

@@ -9,91 +9,90 @@ using Alakoz.Animate;
 using Alakoz.Input;
 using Alakoz.LivingBeings;
 using Alakoz.Collision;
+using Alakoz.GameInfo;
 
 namespace Alakoz.Animate
 {
 	public class AnimationManager
 	{
+		// ========================================================== VARIABLES ==========================================================
 		public const float FPS24 = 0.024f; // milliseconds
-
-		private int _frame = 0; // Current Frame
-
-		private string _frameMSG = ""; // Display message for the frames
-
-		private bool displayFrames { get; set; } // Toggle to show the frame counter
-
-		private Animation _animation; // Corresponding animation
-
 		private float _timer; // Stopwatch for the animation
-
+		private int _frame = 0;
+		private string _frameMSG = "";
+		private bool _paused; // to Pause the animation
+		private bool displayFrames { get; set; }
 		public bool isDone { get; set; } // Checks if the animation is finished
-
 		public Vector2 Position { get; set; } // Position of the animation
+		private Animation _animation {get; set;} // Corresponding animation
+		public Stack<Animation> animationStack {get; set;} // Stack of animations to play in sequence
+		private Animation _tempAnimation {get; set;} // Just to store the looping animation when popping from the stac
+		public SpriteFont frameFont { get; set; } // Display message font
 
-		public SpriteFont frameFont { get; set; } // Font for the display message
-
-		public AnimationManager(Animation newAnimation)
+		// ========================================================== CONSTRUCTOR ==========================================================
+		public AnimationManager(Animation newAnimation, bool display = false)
 		{
 			_animation = newAnimation;
-			displayFrames = false;
-		}
-		public AnimationManager(Animation newAnimation, bool display) :this(newAnimation) // Calls the above constructure and sets the display value
-		{
 			displayFrames = display;
+			animationStack = new Stack<Animation>();
 		}
 		
-		/// Plays the animation
-		public void Play(Animation animation)
-		{
-			if (_animation == animation) return;
+		// ========================================================== STACK FUNCTIONS ==========================================================
+		public void Add(Animation newItem){ animationStack.Push(newItem);} // Add an Animation to the stack
+		public void Clear() {animationStack.Clear();} // Clear the Animation stack
 
-			_animation = animation;
+		/// Reset the current animation to the beginning
+		public void Reset()
+		{
+			_timer = 0;
+			_frame = 0;
 			_animation.currentFrame = 0;
-			_timer = 0;
-			_frame = 0;
-			isDone = false;
-
-		}
-		/// Stops the animation. Pausing it in place ( i think :| ) 
-		public void Stop()
-		{
-			_timer = 0;
-			_frame = 0;
-			if (_animation.looping) _animation.currentFrame = 0;
-            
-			if (!_animation.looping) isDone = true;
-        }
-
-		/// Resets the animation to play from the beginning
-		public void Reset(Animation tempAnimation)
-		{
-			_timer = 0;
-			tempAnimation.currentFrame = 0;
 			isDone = false;
 		}
+		
+		/// Play the animation at the top of the stack
+		public void Play()
+		{
+			Animation newAnimation = animationStack.Pop();
+			if (_animation == newAnimation) return;
 
-		// ----------------------------------------------------- MONOGAME FRAMEWORK FUNCTIONS -----------------------------------------------------
+			_animation = newAnimation;
+			_tempAnimation = newAnimation;
+			Reset(); // Start the animation from the beginning
+		}
+		
+		/// Play the next animation in the stack
+		private void Next()
+		{
+			if (animationStack.Count != 0) Play(); // Play the next animation
+			else { if (_animation.isLooping) Reset();} // There is only one looping animation which is at the bottom of the stack
+		}
+
+		// ========================================================== UPDATING ==========================================================
 
 		public virtual void Update(GameTime gameTime)
 		{
-			_timer += (float)gameTime.ElapsedGameTime.TotalSeconds; // How much time has passed ( in seconds ) since the last update call
+			// How much time has passed ( in seconds ) since the last update call
+			_timer += (float)gameTime.ElapsedGameTime.TotalSeconds; 
+			
+			_frameMSG = "Animation Frame: " + _frame.ToString(); // Display message
 
-			_frameMSG = "Frame: " + _frame.ToString();
-
-            if (_timer >= FPS24 && isDone == false)
+            if (_timer >= _animation.frameSpeed && isDone == false)
 			{
-				_timer = FPS24 - _timer;
+				// offset the timer 
+				_timer = _animation.frameSpeed - _timer;
 
+				// Update the frame counts
 				_animation.currentFrame++;
 				_frame++;
 				
-				if (_animation.currentFrame >= _animation.totalFrames)
-				{
-					this.Stop();
-				}
-
+				// This means that the animation is done
+				if (_animation.currentFrame >= _animation.totalFrames) Next();
 			}
 		}
+
+
+		// ========================================================== DRAWING ==========================================================
 
 		public virtual void Draw(GameTime gameTime, SpriteBatch spriteBatch, Vector2 position, Vector2 scale, SpriteEffects spriteEffects)
 		{
@@ -110,8 +109,8 @@ namespace Alakoz.Animate
 				scale,
 				spriteEffects,
 				0f) ;
-            // if (displayFrames) spriteBatch.DrawString(frameFont, _frameMSG, new Vector2(0f, 400), Color.Gold);
-        }
+            // if (displayFrames) spriteBatch.DrawString(frameFont, _frameMSG, position, Color.Gold, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
+		}
 	}
 }
 

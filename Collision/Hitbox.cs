@@ -8,9 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using Alakoz.Animate;
 using Alakoz.Input;
 using Alakoz.LivingBeings;
-
-
-using TiledCS;
+using Alakoz.GameInfo;
 
 namespace Alakoz.Collision
 {
@@ -49,7 +47,7 @@ namespace Alakoz.Collision
         public bool hitboxVisual = false;
     
         public Hitbox(Vector2 newPosition, float newWidth, float newHeight, int newActiveFrames, Vector2 newKB, int newDamage, int newHitstun){
-            type = HITBOX;
+            type = CollisionType.HITBOX;
             position = newPosition; // Top left corner
             width = newWidth;
             height = newHeight;

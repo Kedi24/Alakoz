@@ -8,10 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using Alakoz.Animate;
 using Alakoz.Input;
 using Alakoz.LivingBeings;
-
-
-using TiledCS;
-using System.Reflection.Metadata.Ecma335;
+using Alakoz.GameInfo;
 
 namespace Alakoz.Collision
 {
@@ -47,7 +44,7 @@ namespace Alakoz.Collision
             origin = new Vector2(newWidth / 2, newHeight / 2);
             scale = Vector2.One; // Default scaling
 
-            type = enemyHURTBOX;
+            type = CollisionType.ENEMYHURTBOX;
             owner = newOwner;
             currBounds = new CollisionShape(left, top, width, height);
         }
@@ -95,7 +92,7 @@ namespace Alakoz.Collision
         // --------------------------------------------------------- Hitbox 
         public override void hitboxCollision(Hitbox currObject)
         {   
-            bool intersecting = getNextBounds().isIntersecting(currObject.getBounds());
+            bool intersecting = getBounds().isIntersecting(currObject.getBounds());
 
             float heightOffset = currObject.top - height;
 

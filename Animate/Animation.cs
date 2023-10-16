@@ -17,15 +17,16 @@ namespace Alakoz.Animate
 
 		public float frameSpeed { get; set; } // How long each frame should be displayed
 
-		public bool looping { get; set; } // variable for looping animation
+		public bool isLooping { get; set; } // variable for looping animation
 
 		public Texture2D Sprite { get; set; } // Sprite sheet 
 
-		public Animation(Texture2D newSprite, int numFrames, bool loop = true)
+		public Animation(Texture2D newSprite, int numFrames, bool loop = true, float speed = 0.024f)
 		{
 			Sprite = newSprite;
 			totalFrames = numFrames;
-			looping =  loop;
+			isLooping = loop;
+			frameSpeed = speed;
 		}
 	}
 }
