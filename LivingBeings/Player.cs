@@ -939,7 +939,7 @@ namespace Alakoz.LivingBeings
 			position.Y += velocity.Y ;
             position.X += velocity.X ;
 			
-			if (position.Y >= 2000f || health == 0) 
+			if (position.Y >= 2000f || health <= 0) 
 			{
 				position.Y = 0f;
 				position.X = 400f; 

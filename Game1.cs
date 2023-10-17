@@ -25,8 +25,6 @@ public class Game1 : Game
     List<Species> allSpecies; // All the species that need to be updated and drawn
     Texture2D Background;
     Player player1;
-
-    Vector2 SymbolPosition;
     
     // ----- MAP ----- //
     TiledMap tileMap;
@@ -64,8 +62,6 @@ public class Game1 : Game
 
         allSpecies = new List<Species>();
         allCollisionObjects = new List<CollisionObject>();
-
-        SymbolPosition = new Vector2(400, 0);
         
         base.Initialize();
     }
@@ -77,18 +73,14 @@ public class Game1 : Game
         Console.WriteLine("Loading Content...");
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Sky");
-        Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Dark Wallpaper #1");
+        Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Sky");
+        // Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Dark Wallpaper #1");
         // Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Scala Ad Caelum");
         
         // font = Content.Load<SpriteFont>("Alakoz Content/Fonts/TestFont");
         
         Console.WriteLine("Loading Map...");
         LoadMap();
-
-        Console.WriteLine("Loading Character assests...");
-        // LoadPlayer1();
-        // LoadEnemy();
 
         Console.WriteLine(" -------------------- LoadContent: OK --------------------");
     }
@@ -241,7 +233,7 @@ public class Game1 : Game
     // Loads each object from the collision layer of the map and creates corresponding collisionObjects
     protected void LoadMapCollisions(){
         
-         // NOTE: The Layers in TILED do not correspond exactly to the tileMap.Layers arrray
+        // NOTE: The Layers in TILED do not correspond exactly to the tileMap.Layers arrray
         //          TILED | Array Index
         //       TileLayer (0) = Index (0)
         //       Static Layer (1) = Index (2)

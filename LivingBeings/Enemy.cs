@@ -28,7 +28,7 @@ namespace Alakoz.LivingBeings
         public SpriteEffects flip;
 
         // ------ MOVEMENT ------- //
-        public Vector2 startPosiiton;
+        public Vector2 startPosition;
         public new Vector2 velocity;
         public float distance;
         public float distanceTraveled;
@@ -68,7 +68,7 @@ namespace Alakoz.LivingBeings
 		public new int numDashes;
 		public new int dashCooldown;
 		public new int hitstun;
-		public new int health;
+		public new int health = 20;
 		
 		
 		// ------ COLLISION ------- //
@@ -97,7 +97,7 @@ namespace Alakoz.LivingBeings
 		public Enemy(Dictionary<StateType, Animation> newSprites ,Vector2 newPosition)
 		{
             position = newPosition;
-            startPosiiton = newPosition;
+            startPosition = newPosition;
             hurtbox = new enemyHurtbox(this, position, hurtboxWidth, hurtboxHeight, newSprites[StateType.HURTBOX], true);
             speed = 2f;
 			distance = 0f;
@@ -384,13 +384,13 @@ namespace Alakoz.LivingBeings
 
             hurtbox.update_Position(position);
 
-            if (position.Y >= 2000f || health == 0) 
+            if (position.Y >= 2000f || health <= 0) 
 			{
-				position.Y = 0f;
-				position.X = 400f; 
+				position.Y = startPosition.Y;
+				position.X = startPosition.X; 
 				velocity.Y = 0f; 
 				acceleration = 0f;
-				health = 100;
+				health = 20;
 			}
 			update_cooldowns();
 

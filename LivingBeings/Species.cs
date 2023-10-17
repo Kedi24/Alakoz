@@ -67,8 +67,6 @@ namespace Alakoz.LivingBeings
 		public Vector2 hitboxPosition = new Vector2(32f, 15f); // For the players attack, will change later
 		public Vector2 KB; // The knockback from the hitbox that interescts the player
 		public bool applyKB = false;
-		float hurtboxWidth = 34;
-		float hurtboxHeight = 45;
 		public bool hurtboxVisual = true;
 		Vector2 spriteCoordinate = new Vector2(-39, -36); // Placement of sprite in relation to the hurtbox. Calculated with aesprite
 
