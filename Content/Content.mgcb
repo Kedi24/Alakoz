@@ -109,6 +109,24 @@
 /processorParam:TextureFormat=Color
 /build:Alakoz Content/Maps/TestMaps/Map - Desert/tmw_desert_spacing.png
 
+#begin Alakoz Content/Maps/TestMaps/Map - Dynamic/Dynamic Level.tmx
+/copy:Alakoz Content/Maps/TestMaps/Map - Dynamic/Dynamic Level.tmx
+
+#begin Alakoz Content/Maps/TestMaps/Map - Dynamic/Dynamic Tileset.tsx
+/copy:Alakoz Content/Maps/TestMaps/Map - Dynamic/Dynamic Tileset.tsx
+
+#begin Alakoz Content/Maps/TestMaps/Map - Dynamic/Dynamic_TilesetImage.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/TestMaps/Map - Dynamic/Dynamic_TilesetImage.png
+
 #begin Alakoz Content/Maps/TestMaps/Map - Hitbox/Base Level.tmx
 /copy:Alakoz Content/Maps/TestMaps/Map - Hitbox/Base Level.tmx
 

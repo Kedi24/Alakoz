@@ -30,11 +30,6 @@ namespace Alakoz.Collision{
         public float top {get {return y ;} set{}}
         public float bottom {get {return y + height;} set{}}
 
-
-        string shape;
-        public const string RECTANGLE = "rectangle";
-        public const string CIRCLE = "circle";
-
         Vector2 origin;
 
         // // ========================================================== CONSTRUCTORS ==========================================================
@@ -47,7 +42,6 @@ namespace Alakoz.Collision{
             width = newWidth;
             height = newHeight;
             origin = new Vector2(newWidth / 2, newHeight / 2);
-            shape = RECTANGLE;
         }
 
         // Circle
@@ -59,7 +53,6 @@ namespace Alakoz.Collision{
             width = radius;
             height = radius;
             origin = new Vector2(newX + radius, newY + radius);
-            shape = CIRCLE;
         }
 
         // ========================================================== INTERSECTIONS ==========================================================

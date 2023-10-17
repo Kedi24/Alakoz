@@ -67,42 +67,26 @@ namespace Alakoz.LivingBeings
 		public Vector2 hitboxPosition = new Vector2(32f, 15f); // For the players attack, will change later
 		public Vector2 KB; // The knockback from the hitbox that interescts the player
 		public bool applyKB = false;
-		float hurtboxWidth = 34;
-		float hurtboxHeight = 45;
 		public bool hurtboxVisual = true;
 		Vector2 spriteCoordinate = new Vector2(-39, -36); // Placement of sprite in relation to the hurtbox. Calculated with aesprite
+
+		// ------ ANIMATION ------ //
+		public AnimationManager animManager;
 
 		// ------ STATES ------- //
 		public string currentState;
 		public string previousState;
+		// ========================================== UPDATING ==========================================
+        // public abstract void Update();
 
-		public const string IDLE = "idle";
-
-		public const string JUMP = "jump";
-		public const string AIR = "air";
-
-		public const string RUN = "run";
-		public const string RUN_END = "run_end";
-		public const string TURNAROUND = "turnaround";
-		
-		public const string CROUCH = "crouch";
-
-		public const string DASH = "dash";
-
-		public const string ATTACK = "attack";
-
-		public const string HIT = "hit";
-
-		public const string SKILL = "skill";
-	
-
+        // ========================================== DRAWING  ==========================================
+        public abstract void Draw(GameTime gameTime, SpriteBatch spriteBatch);
+		// ========================================== ABSTRACT METHODS ==========================================
+		public abstract void update_time(GameTime gametime);
 		public abstract void update_input();
 		public abstract void update_state();
 		public abstract void update_physics();
-		public abstract void update_animations();
-		public abstract void update_time(GameTime gametime);
-
-	
+		public abstract void update_animations();	
 	}
 	
 }

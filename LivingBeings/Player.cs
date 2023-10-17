@@ -26,8 +26,8 @@ namespace Alakoz.LivingBeings
 
 		public string movementMSG = "";
 
-		// ------ MOVEMENT ------- //
-        public new Vector2 position;
+		// // ------ MOVEMENT ------- //
+        // public new Vector2 position;
         public new Vector2 velocity;
 
 		public new Vector2 currPosition;
@@ -85,7 +85,6 @@ namespace Alakoz.LivingBeings
 		public int interactCooldown = 0;
 
 		// ------ COLLISION ------ //
-		public new List<CollisionObject> activeCollisions = new List<CollisionObject>();
 		
 		// public new Hurtbox hurtbox {get; set;}
 		public new Hitbox hitbox {get; set;}
@@ -95,14 +94,13 @@ namespace Alakoz.LivingBeings
 		public new Vector2 KB; // The knockback from the hitbox that interescts the player
 		public new bool applyKB = false;
 		public float hurtboxWidth = 34;
-		public float hurtboxHeight = 45;
+		public float hurtboxHeight = 44;
 		public new bool hurtboxVisual = true;
 		Vector2 spriteCoordinate = new Vector2(-39, -36); // Placement of sprite in relation to the hurtbox. Calculated with aesprite
 
 
 		// ------ ANIMATION ------ //
 		public Dictionary<StateType, Animation> animations;
-		public AnimationManager animManager;
 		public StateType currentAnimation;
 		public StateType previousAnimation;
 		public StateType tempAnimation;
@@ -941,7 +939,7 @@ namespace Alakoz.LivingBeings
 			position.Y += velocity.Y ;
             position.X += velocity.X ;
 			
-			if (position.Y >= 1000f || health == 0) 
+			if (position.Y >= 2000f || health <= 0) 
 			{
 				position.Y = 0f;
 				position.X = 400f; 
@@ -1042,7 +1040,7 @@ namespace Alakoz.LivingBeings
 			hitbox3.Draw(gameTime, spritebatch, position + hitboxPosition, flip);
 		}
         
-        public virtual void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        public override void Draw(GameTime gameTime, SpriteBatch spriteBatch)
 		{
 
 			// Messages to display game / player information
