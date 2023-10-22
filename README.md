@@ -24,6 +24,11 @@ We chose to work with C# since it is often used in the game development industry
 As stated in the [Introduction](#introduction), Alakoz is a rogue-like platformer. Rogue-likes are traditionally characterized as dungeon crawlers, where the players death at any given moment will end the run. With this in mind, it is important utilize the skills and mobility of the character to gain the upper hand.
 
 MOVEMENT / CONTROLS
+
+
+https://github.com/Kedi24/Alakoz/assets/117780105/1a6683cf-14d3-4feb-82e9-391ac05f5131
+
+
 - General movement stuff
 - Dashing 
 
