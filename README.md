@@ -25,9 +25,7 @@ As stated in the [Introduction](#introduction), Alakoz is a rogue-like platforme
 
 MOVEMENT / CONTROLS
 
-
-https://github.com/Kedi24/Alakoz/assets/117780105/1a6683cf-14d3-4feb-82e9-391ac05f5131
-
+https://github.com/Kedi24/Alakoz/blob/952d4ece09be00d830bdf8b93add94e7448e097b/README%20Content/Alakoz%20%7C%20README%20-%20Controls.mov
 
 - General movement stuff
 - Dashing 
