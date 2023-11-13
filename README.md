@@ -19,11 +19,13 @@ As characterized by the genre, roguelikes traditionally involve “runs” where
 
 #### Controls
 For basic movement, use the `W` `A` `S` `D` keys to jump, move left, move right, and crouch.
-VISUAL
+
+    VISUAL
 
 #### Walljumping
 You can also perform walljump while airborne and near a wall. To execute a wall jump, hold into the direction of the wall you would like to jump off of, then press the jump button, `W`.
-VISUAL
+
+    VISUAL
 
 #### Dashing
 Dashing is a mobility option that gives you a burst of speed in the direction you are facing. To perform a dash, press the `F` key. 
