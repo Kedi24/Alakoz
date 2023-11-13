@@ -14,124 +14,66 @@ Alakoz
 * [References](#references)
 
 ## Introduction <a name ="introduction"></a>
+Alakoz is a 2D Rougelike Platformer developed using C# and the MonoGame framework. In this game, players will traverse through levels using a unique set of skills and abilities to reach the end goal. Take caution, however, as hordes of enemies and obstacles stand between you and the finish line. Do you have what it takes to reach the end?
 
-This is a rogue-like platformer game developed in C# using the MonoGame framework (insert citation of creator as well as github link). The project is a passion project we started working on due to our love for game development. Our end goal with this project was to simply make something fun and enjoyable for audiences while improving our skills as developers while working as a team.
-
-We chose to work with C# since it is often used in the game development industry. In addition, there was a plethora of interesting libraries to use with the MonoGame such as the Tiled library, which helped with map development. 
+As developers, Alakoz is a passion project and our first step into game development. To gain a familiarity with some of the tools used in game development, we have decided to build the game using C#, MonoGame, .NET and Tiled as they are common within the industry. All in all, we hope to grow in our knowledge of programming and understanding of game development, while also creating an enjoyable experience for audiences.
 
 ## Gameplay <a name ="gameplay"></a>
-
-As stated in the [Introduction](#introduction), Alakoz is a rogue-like platformer. Rogue-likes are traditionally characterized as dungeon crawlers, where the players death at any given moment will end the run. With this in mind, it is important utilize the skills and mobility of the character to gain the upper hand.
-
-MOVEMENT / CONTROLS
-
-https://github.com/Kedi24/Alakoz/blob/952d4ece09be00d830bdf8b93add94e7448e097b/README%20Content/Alakoz%20%7C%20README%20-%20Controls.mov
-
-- General movement stuff
-- Dashing 
-
-OBSTACLES 
-- Enemies
-- other map obstacles
-
-END GOAL
-- goal stuff 
+As characterised by the genre, roguelikes traditionally involve “runs” where the you must battle through enemies and maneuver around obstacles to reach the goal. Failure to complete these tasks, however, can be fatal as the player's death at any given moment will end the run. With this in mind, you must use the skills and abilities at your disposal to gain the upper hand.
 
 
-In addition, we chose to went with a platformer game style, since we enjoyed platforming games in general. The parkour playstyle makes the game a more thrilling experience with high stakes in each run. 
+#### Controls
+For basic movement, use the `W` `A` `S` `D` keys to jump, move left, move right, and crouch.
+VISUAL
+
+#### Walljumping
+You can also preform walljump while airborne and near a wall. To execute a wall jump, hold into the direction of the wall you would like to jump off of, then press the jump button, `W`.
+VISUAL
+
+#### Dashing
+Dashing is a mobility option that gives you a burst of speed in the direction you are facing. To preform a dash, press the `F` key. 
+    VISUAL
+
+You can use a dash in both the air and on the ground. Use this to clear gaps or place yourself in advantageous positions.
+    VISUAL
+
+It is also possible to cancel a dash with a jump. To execute this simply tap the jump button at any point during the dash. 
+    VISUAL
+
+Compared to a normal dash, a cancelled dash has a smaller amount of cooldown. Be cautious, however, as a cancelled dash does not maintain your forward momentum. 
+
+Using these attributes in tandem with one another can create unique ways to traverse the map.
+    VISUAL
 
 ## Content <a name ="#content"></a>
 
-### What's "done"
+### Currently implemented features
 
-We have sucessfuly implemented the base classes for generic platformers such as
-* Players
-* Platforms
-* Map
-* Collisions 
-* Enemy
+So far, we have successfully implemented the basic traits of a platformer, such as:
 
-As well as generic game design mechanics such as 
-* Game states 
-* Cameras
+* Player Control
+* Collision Detection
+* Basic Enemy movement
+* Basic Levels with obstacles
+
+As well as some general game design features: 
+* Game States 
+* Camera Control
 
 
 
-### What we plan to add
-* Complex enemies
-    * Follow a path finding algorithm to chase the player around the map
-* Player attacks 
+### For future updates
+Here is is a list of some of the features we plan to tackle in future updates.
+* Complex Enemies
+    * Enemies will utilize a path finding algorithm to chase the player around the map in using their own unique abilites
+* Player Attacks and Skill Tree
     * A set of classes the player can choose from, such as ranged and melee. 
     * Skills to go with those classes
-* A save file system
+* A Save File system
 
 
 ## References <a name ="references"></a>
 
-Hello There 
----
-
-```gherkin=
-Feature: Guess the word
-
-  # The first example has two steps
-  Scenario: Maker starts a game
-    When the Maker starts a game
-    Then the Maker waits for a Breaker to join
-
-  # The second example has three steps
-  Scenario: Breaker joins a game
-    Given the Maker has started a game with the word "silky"
-    When the Breaker joins the Maker's game
-    Then the Breaker must guess a word with 5 characters
-```
-> I choose a lazy person to do a hard job. Because a lazy person will find an easy way to do it. [name=Bill Gates]
-
-
-```gherkin=
-Feature: Shopping Cart
-  As a Shopper
-  I want to put items in my shopping cart
-  Because I want to manage items before I check out
-
-  Scenario: User adds item to cart
-    Given I'm a logged-in User
-    When I go to the Item page
-    And I click "Add item to cart"
-    Then the quantity of items in my cart should go up
-    And my subtotal should increment
-    And the warehouse inventory should decrement
-```
-
-> Read more about Gherkin here: https://docs.cucumber.io/gherkin/reference/
-
-User flows
----
-```sequence
-Alice->Bob: Hello Bob, how are you?
-Note right of Bob: Bob thinks
-Bob-->Alice: I am good thanks!
-Note left of Alice: Alice responds
-Alice->Bob: Where have you been?
-```
-
-> Read more about sequence-diagrams here: http://bramp.github.io/js-sequence-diagrams/
-
-Project Timeline
----
-```mermaid
-gantt
-    title A Gantt Diagram
-
-    section Section
-    A task           :a1, 2014-01-01, 30d
-    Another task     :after a1  , 20d
-    section Another
-    Task in sec      :2014-01-12  , 12d
-    anther task      : 24d
-```
-
-> Read more about mermaid here: http://mermaid-js.github.io/mermaid/
 
 ## Appendix and FAQ
 
