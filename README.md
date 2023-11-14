@@ -20,7 +20,7 @@ As characterized by the genre, roguelikes traditionally involve “runs” where
 #### Controls
 For basic movement, use the `W` `A` `S` `D` keys to jump, move left, move right, and crouch.
 
-    VISUAL
+https://github.com/Kedi24/Alakoz/assets/117780105/cb26cce4-1004-49a3-87f1-6e40b6b16910
 
 #### Walljumping
 You can also perform walljump while airborne and near a wall. To execute a wall jump, hold into the direction of the wall you would like to jump off of, then press the jump button, `W`.
@@ -30,15 +30,15 @@ You can also perform walljump while airborne and near a wall. To execute a wall 
 #### Dashing
 Dashing is a mobility option that gives you a burst of speed in the direction you are facing. To perform a dash, press the `F` key. 
     
-    VISUAL
+https://github.com/Kedi24/Alakoz/assets/117780105/b8d4b653-70fc-4ea5-a77b-2c218f79b652
 
 You can use a dash in both the air and on the ground. Use this to clear gaps or place yourself in advantageous positions.
     
     VISUAL
 
 It is also possible to cancel a dash with a jump. To execute this simply tap the jump button at any point during the dash. 
-    
-    VISUAL
+
+https://github.com/Kedi24/Alakoz/assets/117780105/3fccbb76-15ea-4aff-9a90-06aa3d4fc740
 
 Compared to a normal dash, a canceled dash has a smaller amount of cooldown. Be cautious, however, as a canceled dash does not maintain your forward momentum. 
 
