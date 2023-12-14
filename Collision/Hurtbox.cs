@@ -101,6 +101,10 @@ namespace Alakoz.Collision
                 case CollisionType.ENEMYHURTBOX:
                     enemyHurtboxCollision((enemyHurtbox)currObject);
                     break;
+                case CollisionType.DOOR:
+                    doorCollision( (Doorbox) currObject);
+                    break;
+
             }
         }
 
@@ -273,6 +277,21 @@ namespace Alakoz.Collision
                     owner.velocity.Y = 0;
                     owner.position.Y =  currObject.top - owner.hurtboxHeight;
                 }
+            }
+        }
+    
+        // ========================================================== OBJECT COLLISIONS ==========================================================
+        
+        //--------------------------------------------------------- Door
+        public void doorCollision( Doorbox currObject )
+        {
+            bool intersecting = getBounds().isIntersecting(currObject.getBounds());
+
+            if (intersecting && owner.interacting && !owner.beginInteract)
+            {
+                owner.beginInteract = true;
+                owner.interactFunction += currObject.owner.sendState;
+                currObject.owner.open = true;
             }
         }
     }
