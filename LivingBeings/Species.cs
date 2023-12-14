@@ -4,8 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using Alakoz.Animate;
-using Alakoz.Input;
-using Alakoz.LivingBeings;
+using Alakoz.GameInfo;
 using Alakoz.Collision;
 
 
@@ -74,8 +73,8 @@ namespace Alakoz.LivingBeings
 		public AnimationManager animManager;
 
 		// ------ STATES ------- //
-		public string currentState;
-		public string previousState;
+		public StateType currentState;
+		public StateType previousState;
 		// ========================================== UPDATING ==========================================
         // public abstract void Update();
 

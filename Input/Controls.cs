@@ -21,6 +21,7 @@ namespace Alakoz.Input
 		public Keys Dash { get; set; }
 		public Keys Attack { get; set; }
 		public Keys Skill { get; set; }
+		public Keys Interact { get; set; }
 
 		public Controls()
 		{
@@ -43,7 +44,7 @@ namespace Alakoz.Input
 
 
 		/// resets the current keyboard configuration to default settings
-				public void reset()
+		public void reset()
 		{
 			// DEFAULT CONTROLS
 			Left = Keys.A;
@@ -55,6 +56,7 @@ namespace Alakoz.Input
             Dash = Keys.F;
             Attack = Keys.R;
             Skill = Keys.T;
+			Interact = Keys.Q;
         }
 
 		public bool isAllUp()
@@ -88,6 +90,7 @@ namespace Alakoz.Input
             Dash = Keys.H;
             Attack = Keys.Y;
             Skill = Keys.G;
+			Interact = Keys.O;
 		}
     }
 }

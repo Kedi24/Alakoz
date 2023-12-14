@@ -77,18 +77,24 @@ public class Game1 : Game
         // Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Dark Wallpaper #1");
         // Background = Content.Load<Texture2D>("Alakoz Content/Backgrounds/Scala Ad Caelum");
         
-        // font = Content.Load<SpriteFont>("Alakoz Content/Fonts/TestFont");
+        font = Content.Load<SpriteFont>("Alakoz Content/Fonts/TestFont");
         
+        // Loading visuals for collision
+        CollisionObject.LoadVisuals(Content);
+        Door.LoadDoors();
+
         Console.WriteLine("Loading Map...");
         LoadMap();
 
         Console.WriteLine(" -------------------- LoadContent: OK --------------------");
     }
-    protected Player LoadPlayer1(Dictionary<StateType, Animation> player1Animations, Vector2 spawnPoint)
+    protected Player LoadPlayer1(Vector2 spawnPoint)
     {
         string playerDirectory = "Alakoz Content/Species/Player/Rebel_Animations/"; 
         string enemyDirectory = "Alakoz Content/Species/Player/Base_Animations/";
         string effectDirectory = "Alakoz Content/Effects/General/";
+
+        Dictionary<StateType, Animation> player1Animations = new Dictionary<StateType, Animation>();
         
         Animation Symbol = new Animation(Content.Load<Texture2D>( enemyDirectory + "ball"), 1);
         Animation playerHurtbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
@@ -147,9 +153,9 @@ public class Game1 : Game
         player1 = new Player(player1Animations, spawnPoint);
 
         // THIS IS FOR THE INFORMATION DISPLAY, MOVE INTO PLAYER CLASS LATER
-        // player1.stateFONT = font;
-        // player1.animManager.frameFont = font;
-        // player1.hurtbox.spriteManager.frameFont = font;
+        player1.stateFONT = font;
+        player1.animManager.frameFont = font;
+        player1.hurtbox.spriteManager.frameFont = font;
 
         // Setup the controls
         player1.controls.reset();
@@ -157,11 +163,13 @@ public class Game1 : Game
         return player1;
     }
     
-    protected Enemy LoadEnemy(Dictionary<StateType, Animation> enemyAnimations, Vector2 spawnPoint)
+    protected Enemy LoadEnemy(Vector2 spawnPoint)
     {
 
         string enemyDirectory = "Alakoz Content/Species/Player/Base_Animations/";
         string effectDirectory = "Alakoz Content/Effects/General/";
+
+        Dictionary<StateType, Animation> enemyAnimations = new Dictionary<StateType, Animation>();
 
         Animation Symbol = new Animation(Content.Load<Texture2D>( enemyDirectory + "ball"), 1);
         Animation enemyHurtbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
@@ -192,6 +200,49 @@ public class Game1 : Game
         return enemy;
     }
 
+    protected Door LoadDoor(Vector2 doorPos, float doorWidth, float doorHeight, int doorID, int nextID, Vector2 movePos)
+    {
+        // Animations for the Door
+        Dictionary<StateType, Animation> doorAnimations = new Dictionary<StateType, Animation>();
+        
+        // Load the animations for the Door
+        string doorDirectory = "Alakoz Content/Maps/MapObjects/Doors/Door - Small/";
+        string effectDirectory = "Alakoz Content/Effects/General/";
+        Animation Hurtbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
+        Animation Hitbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
+
+        Animation open = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_Open"), 1);                
+        Animation openStart = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_OpenStart"), 9, false);
+        Animation close = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_Close"), 1);
+        Animation closeStart = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_CloseStart"), 10, false);
+        Animation idle = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_Idle"), 38, false);
+        Animation unlock = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_Unlock"), 30, false);
+        Animation fadeIn = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_FadeIn"), 11, false);
+        Animation fadeOut = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_FadeOut"), 10, false);
+
+
+        // ----- Active Animations
+        doorAnimations.Add(StateType.ACTIVE, Hitbox);
+        doorAnimations.Add(StateType.ACTIVESTART, Hitbox);
+
+        // ----- Inactive Animations
+        doorAnimations.Add(StateType.INACTIVE, Hurtbox); 
+        doorAnimations.Add(StateType.INACTIVESTART, Hurtbox);
+        doorAnimations.Add(StateType.OPEN, open);
+        doorAnimations.Add(StateType.OPENSTART, openStart);
+        doorAnimations.Add(StateType.CLOSE, close);
+        doorAnimations.Add(StateType.CLOSESTART, closeStart);
+        doorAnimations.Add(StateType.IDLE, idle);
+        doorAnimations.Add(StateType.UNLOCK, unlock);
+        doorAnimations.Add(StateType.FADEIN, fadeIn);
+        doorAnimations.Add(StateType.FADEOUT, fadeOut);
+        
+        // Create the new door
+        BasicDoor newDoor = new BasicDoor(doorPos, doorWidth, doorHeight, doorID, nextID, movePos, doorAnimations);
+        newDoor.stateFONT = font;
+
+        return newDoor;
+    }
     protected void LoadMap()
     {
         string testmapDirectory = "Alakoz Content/Maps/TestMaps/";
@@ -208,7 +259,7 @@ public class Game1 : Game
         // tilesetTexture = Content.Load<Texture2D>(testmapDirectory + "Map - Hitbox/Base_Tileset");
         // allTilesets = tileMap.GetTiledTilesets(Content.RootDirectory + testmapDirectory + "Map - Hitbox/");
 
-        // ---------- MAP 3: Dynamic Level
+        // // ---------- MAP 3: Dynamic Level
         tileMap = new TiledMap(Content.RootDirectory + testmapDirectory + "Map - Dynamic/Dynamic Level.tmx"); // Map
         tileSet = new TiledTileset(Content.RootDirectory + testmapDirectory + "Map - Dynamic/Dynamic Tileset.tsx"); // Tileset
         tilesetTexture = Content.Load<Texture2D>(testmapDirectory + "Map - Dynamic/Dynamic_TilesetImage"); // Image
@@ -226,31 +277,34 @@ public class Game1 : Game
         
         collisionLayerObjects = collisionLayer.objects;
         
-
         LoadMapCollisions();
     }
 
     // Loads each object from the collision layer of the map and creates corresponding collisionObjects
-    protected void LoadMapCollisions(){
-        
-        // NOTE: The Layers in TILED do not correspond exactly to the tileMap.Layers arrray
+    protected void LoadMapCollisions()
+    {
+         // NOTE: The Layers in TILED do not correspond exactly to the tileMap.Layers arrray
         //          TILED | Array Index
         //       TileLayer (0) = Index (0)
-        //       Static Layer (1) = Index (2)
-        //       Dynamic Layer (2) = Index (1)
+        //       Static Layer (1) = Index (3)
+        //       Dynamic Layer (2) = Index (2)
+        //       Species Layer (3) = Index (1)
 
         Console.WriteLine("Loading Static assests...");
-        // Load all the static collisions from layer[2] first
+        // Load all the static collisions from layer[1] first
         LoadStaticCollisions();
 
         Console.WriteLine("Loading Dynamic assests...");
-        // Load all the dynamic collisions from layer[1] next
+        // Load all the dynamic collisions from layer[2] next
         LoadDynamicCollisions(); 
+
+        Console.WriteLine("Loading Characters...");
+        LoadCharacterCollisions();
 
         // Local functions for clarity
         void LoadStaticCollisions()
         {
-            collisionLayer = tileMap.Layers[2];
+            collisionLayer = tileMap.Layers[3];
             collisionLayerObjects = collisionLayer.objects;
             
             if (collisionLayerObjects.Length <= 0) return;
@@ -285,6 +339,37 @@ public class Game1 : Game
         }
         void LoadDynamicCollisions()
         {
+            collisionLayer = tileMap.Layers[2]; 
+            collisionLayerObjects = collisionLayer.objects;
+            
+            if (collisionLayerObjects.Length <= 0) return;
+
+            // Parsing property information from the object layer to handle collisions
+            for (int i = 0; i < collisionLayerObjects.Length; i++)
+            {
+
+                TiledObject currentObject = collisionLayerObjects[i]; // Current Object
+                TiledProperty currentProperty = currentObject.properties[0]; // Object type
+
+                Species tempObject; // Current collision Object
+
+                // Door
+                if (currentProperty.value.Equals(CollisionType.DOOR.ToString())) 
+                {
+
+                    float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
+                    float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
+                    int sendID = (int)Convert.ToInt32(currentObject.properties[3].value);
+
+                    tempObject = LoadDoor(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height, currentObject.id, sendID, new Vector2(directionX, directionY));
+                }
+                else tempObject = LoadDoor(new Vector2(currentObject.x, currentObject.y), currentObject.width, currentObject.height, currentObject.id, currentObject.id, Vector2.Zero);
+
+                allSpecies.Add(tempObject);
+            }
+        }
+        void LoadCharacterCollisions()
+        {
             collisionLayer = tileMap.Layers[1]; 
             collisionLayerObjects = collisionLayer.objects;
             
@@ -299,34 +384,33 @@ public class Game1 : Game
 
                 Species tempObject; // Current collision Object
 
-                // Player
+                 // Player
                 if (currentProperty.value.Equals(CollisionType.PLAYERSPAWN.ToString())) 
                 {
-                    float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
-                    float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
+                    // float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
+                    // float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
                     
-                    tempObject = LoadPlayer1(new Dictionary<StateType, Animation>(), new Vector2(directionX, directionY) );
+                    tempObject = LoadPlayer1( new Vector2(currentObject.x, currentObject.y) );
                 }
                 // Enemy
                 else if (currentProperty.value.Equals(CollisionType.ENEMYSPAWN.ToString())) 
                 {
-                    float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
-                    float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
+                    // float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
+                    // float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
                     
-                    tempObject = LoadEnemy(new Dictionary<StateType, Animation>(), new Vector2(directionX, directionY) );
+                    tempObject = LoadEnemy( new Vector2(currentObject.x, currentObject.y) );
                 }
-                // Otherwise just load an enemy
-                else 
+                else // otherwise, just load an enemy
                 {
                     float directionX = (float)Convert.ToDouble(currentObject.properties[1].value); // Values are stored as strings so just convert them to floats
                     float directionY = (float)Convert.ToDouble(currentObject.properties[2].value); // Values are stored as strings so just convert them to floats
                     
-                    tempObject = LoadEnemy(new Dictionary<StateType, Animation>(), new Vector2(directionX, directionY) );
+                    tempObject = LoadEnemy( new Vector2(directionX, directionY) );
                 }
-
                 allSpecies.Add(tempObject);
-            }
+           }
         }
+    
     }
 
     // ============================================= UPDATING =============================================
@@ -437,19 +521,17 @@ public class Game1 : Game
                 
                 // -------------------------------------------------------------------------------------- 
 
-                // NOTE: This block of code is for collitions only. More specificaly, this uses
+                // NOTE: This block of code is for tile collisions only. More specificaly, this uses
                 //       A different method for parsing collisons. It reads collisions by tiles individually rather
                 //       than by objects. uncomment if this method is preferred
+                
                 // //To access the collision linked to a specific tile. First get the specified tile
                 // TiledTile currentTile = tileMap.GetTiledTile(mapTileset, currTileset, gid);
                 
                 // // Then extract the corresponding object that was tied to the tile
                 // TiledObject tileCollisions = currentTile.objects[0];
 
-
-
                 _spriteBatch.Draw(tilesetTexture, destination, source, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0f);
-
             }
         }
     }

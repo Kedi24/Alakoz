@@ -35,6 +35,20 @@ namespace Alakoz.GameInfo
         SYMBOL, // Placeholder for unimplemented animations
         HURTBOX, // Just for convenience, will delete later
         HITBOX, // Just for convenience, will delete later
+        
+        // ----- DOORS
+        INTERACT,
+        ACTIVE,
+        ACTIVESTART,
+        INACTIVE,
+        INACTIVESTART,
+        OPEN,
+        OPENSTART,
+        CLOSE,
+        CLOSESTART,
+        FADEIN,
+        FADEOUT,
+        UNLOCK,
     }
 
     // ========================================== COLLISION ==========================================

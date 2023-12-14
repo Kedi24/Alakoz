@@ -82,6 +82,11 @@ namespace Alakoz.LivingBeings
 	
 		// ---- Interacting
 		public bool interacting = false;
+		public bool beginInteract = false; // When there is something for the player to interact with
+		
+		// The function to call when the player interacts with another GameObject
+		// This delegates the states of the player to the function defined in the corresonding GameObject instead.
+		public event EventHandler interactFunction; 
 		public int interactCooldown = 0;
 
 		// ------ COLLISION ------ //
@@ -452,8 +457,8 @@ namespace Alakoz.LivingBeings
 		{
 			if (!grounded)
 			{
-				tempAnimation = StateType.FALL;
 				set_state(StateType.AIR);
+				tempAnimation = StateType.FALL;
 				air_state();
 			}
 			else if (jumping) 
@@ -499,9 +504,10 @@ namespace Alakoz.LivingBeings
 				set_state(StateType.ATTACK);
 				attack_state();
 			} 
-			else 
+			else if (beginInteract)
 			{
-				tempAnimation = StateType.IDLE;
+				set_state(StateType.INTERACT);
+				interact_state();
 			}
 		}
 		
@@ -588,6 +594,14 @@ namespace Alakoz.LivingBeings
 				set_state(StateType.ATTACK);
 				attack_state();
 			} 
+			else if (beginInteract)
+			{
+				if (velocity.X > 2.5 || velocity.X < -2.5) preAnimations = new ArrayList{ StateType.RUNEND };
+				tempAnimation = StateType.IDLE;
+				
+				set_state(StateType.INTERACT);
+				interact_state();
+			}
 			else
 			{
 				if (!(move_left || move_right))
@@ -656,9 +670,14 @@ namespace Alakoz.LivingBeings
 				set_state(StateType.RUN);
 				run_state();
 			}
-			else
+			else if (beginInteract)
 			{
-				// if (stateFrame == 0) hurtbox.changeDimensions(new Vector2(hurtbox.width / 2, hurtbox.height / 2), 34, 22);
+				preAnimations = new ArrayList(){StateType.CROUCHEND};
+				tempAnimation = StateType.IDLE;
+				// Update the hurtbox
+				hurtbox.resetDimensions();
+				set_state(StateType.INTERACT);
+				interact_state();
 			}
 		}
 
@@ -739,7 +758,16 @@ namespace Alakoz.LivingBeings
 			set_attack();
 		}
 
-		
+		public void interact_state()
+		{
+			if (!beginInteract) 
+			{
+				tempAnimation = StateType.IDLE;
+				set_state(StateType.IDLE);
+				idle_state();
+			}
+			else interactFunction.Invoke(this, new EventArgs());			
+		}
 		
 		// ========================================== SETTERS ==========================================
 		
@@ -872,13 +900,13 @@ namespace Alakoz.LivingBeings
 			// Attack
 			if (controls.isDown(controls.Attack)) attacking = true;
 
-			// // Map Interactions
-			// if (controls.isDown(controls.Interact) && interactCooldown == 0) interacting = true;
-			// else interacting = false;
+			// Map Interactions
+			if (controls.isDown(controls.Interact) && interactCooldown == 0) interacting = true;
+			else interacting = false;
 
 		}
 
-		// Update the players state, and set the values for the physics to be applied
+		// Update the players state, and set tqhe values for the physics to be applied
 		public override void update_state()
 		{
 			if (hit) 
@@ -911,7 +939,9 @@ namespace Alakoz.LivingBeings
 				case StateType.ATTACK:
 					attack_state();
 					break;
-				
+				case StateType.INTERACT:
+					interact_state();
+					break;
 			}
 			grounded = false;
 			wallCollide = false;
@@ -994,9 +1024,9 @@ namespace Alakoz.LivingBeings
 			// -------- Health
 			if (health < 0) health = 0;
 
-			// // -------- Interact
-			// if (interactCooldown > 0) interactCooldown -= 1;
-			// else if (interactCooldown < 0) interactCooldown = 0;
+			// -------- Interact
+			if (interactCooldown > 0) interactCooldown -= 1;
+			else if (interactCooldown < 0) interactCooldown = 0;
 		}
 	
 		// Updating the current animation to be played
@@ -1026,23 +1056,8 @@ namespace Alakoz.LivingBeings
 
 
 		// ========================================== DRAWING ==========================================
-		public void DrawPlayer(GameTime gameTime, SpriteBatch spritebatch)
+		public void drawDebug(GameTime gameTime, SpriteBatch spriteBatch)
 		{
-			// Draw player animation
-			animManager.Draw(gameTime, spritebatch, position + spriteCoordinate, Vector2.One, flip); 
-			
-			// Draw the players hurtbox, will change later
-			hurtbox.Draw(gameTime, spritebatch, position, flip);
-			
-			// Attack hitboxes just for testing. Will remove/change later
-			hitbox.Draw(gameTime, spritebatch, position + hitboxPosition, flip);
-			hitbox2.Draw(gameTime, spritebatch, position + hitboxPosition, flip);
-			hitbox3.Draw(gameTime, spritebatch, position + hitboxPosition, flip);
-		}
-        
-        public override void Draw(GameTime gameTime, SpriteBatch spriteBatch)
-		{
-
 			// Messages to display game / player information
 			stateMSG = "Current State: " + currentState 
 			+ "\nPrevious State: " + previousState
@@ -1060,6 +1075,13 @@ namespace Alakoz.LivingBeings
             + "\nAcceleration: " + acceleration.ToString() 
 			+ "\nDirection: " + direction.ToString()
 			+ "\nGravity: " + gravity.ToString();
+
+			Matrix positionMatrix = Matrix.CreateTranslation(new Vector3(position.X, position.Y, 0 ));
+			string matrixMSG = "Position Matrix: " 
+							+ "\n" + positionMatrix.M11 + ", " + positionMatrix.M12 + ", " + positionMatrix.M13 + ", " + positionMatrix.M14
+							+ "\n" + positionMatrix.M21 + ", " + positionMatrix.M22 + ", " + positionMatrix.M23 + ", " + positionMatrix.M24
+							+ "\n" + positionMatrix.M31 + ", " + positionMatrix.M32 + ", " + positionMatrix.M33 + ", " + positionMatrix.M34
+							+ "\n" + positionMatrix.M41 + ", " + positionMatrix.M42 + ", " + positionMatrix.M43 + ", " + positionMatrix.M44;
 			
 			string inputMSG = 
 			"Left = " + move_left.ToString() 
@@ -1069,20 +1091,32 @@ namespace Alakoz.LivingBeings
 			+ "\nCrouching = " + crouching
 			+ "\nGrounded = " + grounded
 			+ "\nAttacking = " + attacking
+			+ "\nInterating = " + beginInteract
 			+ "\nHit = " + hit
 			+ "\nWall = " + wallCollide
 			+ "\nIgnore Size: " + hitbox.ignoreObjects.Count;
-			DrawPlayer(gameTime, spriteBatch);
 
-            // spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(800f, 400), Color.DarkRed);
-            // spriteBatch.DrawString(stateFONT, stateMSG, new Vector2(5f, 415), Color.Gold);
-			// spriteBatch.DrawString(stateFONT, inputMSG, new Vector2(5f, 550), Color.Orange);
+			 spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(hurtboxWidth+ 20, -100) + position, Color.GreenYellow, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
+            spriteBatch.DrawString(stateFONT, stateMSG, new Vector2(-39, -120) + position, Color.Gold, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
+			spriteBatch.DrawString(stateFONT, inputMSG, new Vector2(-39, hurtboxHeight) + position, Color.Blue, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
+			spriteBatch.DrawString(stateFONT, matrixMSG, new Vector2(hurtboxWidth + 20, hurtboxHeight) + position, Color.OrangeRed, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);		
 
-            // spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(hurtboxWidth+ 20, -100) + position, Color.GreenYellow, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
-            // spriteBatch.DrawString(stateFONT, stateMSG, new Vector2(-39, -120) + position, Color.Gold, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
-			// spriteBatch.DrawString(stateFONT, inputMSG, new Vector2(-39, hurtboxHeight) + position, Color.Blue, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
-
+		}
+        
+        public override void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+		{
+			// Draw player animation
+			animManager.Draw(gameTime, spriteBatch, position + spriteCoordinate, Vector2.One, flip); 
 			
+			// Draw the players hurtbox, will change later
+			// hurtbox.Draw(spriteBatch,flip);
+			
+			// Attack hitboxes just for testing. Will remove/change later
+			hitbox.Draw(gameTime, spriteBatch, position + hitboxPosition, flip);
+			hitbox2.Draw(gameTime, spriteBatch, position + hitboxPosition, flip);
+			hitbox3.Draw(gameTime, spriteBatch, position + hitboxPosition, flip);
+
+			// drawDebug(gameTime, spriteBatch);	
         }
 	}
 }
