@@ -9,25 +9,24 @@ using Alakoz.Animate;
 using Alakoz.Collision;
 
 
-namespace Alakoz.LivingBeings
+namespace Alakoz.GameObjects
 {
     // A representation of a Door
 
     public class BasicDoor : Door
     {
         // --------------------------------------------------- CONSTRUCTOR ---------------------------------------------------
-        public BasicDoor( Vector2 newPosition, float newWidth, float newHeight, int newID, int newTargetID, Vector2 movePosition, Dictionary<StateType, Animation> newAnimations)
+        public BasicDoor( Vector2 newPosition, float newWidth, float newHeight, int newID, int newTargetID, Dictionary<StateType, Animation> newAnimations)
         {
-            // Dimensions\  
+             // Dimensions
             position = newPosition;
             width = newWidth;
             height = newHeight;
             ID = newID;
             targetID = newTargetID;
-            endPosition = movePosition;
 
             // Collision
-            bounds = new Doorbox(this, position, width, height);
+            bounds = new Doorbox(this, new Vector2(position.X + 20, position.Y + 32), width - 40, height - 32); // Center the hurtbox
             activeCollisions.Add(bounds);
 
             // States
@@ -70,7 +69,7 @@ namespace Alakoz.LivingBeings
             }
             else
             {
-                if (stateFrame % 60 == 0 && stateFrame > 0 || stateFrame == 5) 
+                 if (stateFrame % 60 == 0 && stateFrame > 0) 
                 {
                     preAnimations = new ArrayList(){StateType.IDLE};
                     set_preAnimations();
@@ -115,14 +114,14 @@ namespace Alakoz.LivingBeings
                 if (!hovering) 
                 {
                     tempAnimation = StateType.CLOSE;
-				    preAnimations = new ArrayList(){StateType.CLOSESTART};
+				    preAnimations = new ArrayList(){StateType.FADEOUT, StateType.CLOSESTART};
                     set_state(StateType.INACTIVE);
                     inactiveState();
                 }
                 else
                 {
                     tempAnimation = StateType.ACTIVE;
-				    preAnimations = new ArrayList(){StateType.CLOSESTART};
+				    preAnimations = new ArrayList(){StateType.FADEOUT, StateType.CLOSESTART};
                     set_state(StateType.ACTIVE);
                     activeState();
                 }
@@ -141,16 +140,16 @@ namespace Alakoz.LivingBeings
         {
             // Some player variables that will need to be modified
             Player currPlayer = (Player) sender;
-            StateType currTempAnimation = currPlayer.tempAnimation;
-		    ArrayList currPreAnimations = currPlayer.preAnimations;
             int playerFrame = currPlayer.stateFrame;
 
             currPlayer.velocity.X = 0;
+            currPlayer.tempAnimation = StateType.NONE;
+            currPlayer.preAnimations = new ArrayList(){StateType.DOORENTER};
 
             // Need to set the state of the player to "INTERACT STATE"
             if (playerFrame >= 40)
             {
-                Send(currPlayer, targetID); // Id taken from Tiled
+                Send(currPlayer, targetID); // Send player to new door
             }
         }
 
@@ -159,9 +158,10 @@ namespace Alakoz.LivingBeings
         {
             // Some player variables that will need to be modified
             Player currPlayer = (Player) sender;
-            StateType currTempAnimation = currPlayer.tempAnimation;
-		    ArrayList currPreAnimations = currPlayer.preAnimations;
             int playerFrame = currPlayer.stateFrame;
+
+            currPlayer.tempAnimation = StateType.IDLE;
+            currPlayer.preAnimations = new ArrayList(){};
 
             if (playerFrame >= 40)
             {

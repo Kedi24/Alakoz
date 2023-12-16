@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Input;
 
 using Alakoz.Animate;
 using Alakoz.Input;
-using Alakoz.LivingBeings;
+using Alakoz.GameObjects;
 using Alakoz.GameInfo;
 
 namespace Alakoz.Collision
@@ -23,7 +23,7 @@ namespace Alakoz.Collision
         public Vector2 origin;
         public Vector2 scale;
 
-        public Player owner; // The entity that owns this hurtbox
+        public GameObject owner = null; // The entity that owns this hurtbox
 
         public float left {get {return position.X;} set{}}
         public float right {get {return position.X + width;} set{}}
@@ -42,11 +42,12 @@ namespace Alakoz.Collision
         public List<CollisionObject> ignoreObjects; // To prevent the hitbox from ever colliding with certain objects 
 
         public Animation sprite;
-        public AnimationManager spriteManager;
 
         public bool hitboxVisual = false;
     
-        public Hitbox(Vector2 newPosition, float newWidth, float newHeight, int newActiveFrames, Vector2 newKB, int newDamage, int newHitstun){
+        public Hitbox(Vector2 newPosition, float newWidth, float newHeight, int newActiveFrames, Vector2 newKB, int newDamage, int newHitstun, GameObject newOwner = null){
+            owner = newOwner;
+            
             type = CollisionType.HITBOX;
             position = newPosition; // Top left corner
             width = newWidth;
@@ -58,20 +59,18 @@ namespace Alakoz.Collision
             knockback = newKB;
             damage = newDamage;
             hitstun = newHitstun;
+            active = true;
 
             collidingObjects = new List<CollisionObject>();   
             ignoreObjects = new List<CollisionObject>();         
-
             bounds = new CollisionShape(left, top, width, height);
+
+            sprite = CollisionSprites[CollisionType.HITBOX];
         }
-        public Hitbox(Vector2 newPosition, float newWidth, float newHeight, int newActiveFrames, Vector2 newKB, int newDamage, int newHitstun, Animation hitboxSprite, bool visual) 
+        public Hitbox(Vector2 newPosition, float newWidth, float newHeight, int newActiveFrames, Vector2 newKB, int newDamage, int newHitstun, bool visual) 
         :this(newPosition, newWidth, newHeight, newActiveFrames, newKB, newDamage, newHitstun)
         {
-            sprite = hitboxSprite;
-            scale = new Vector2((newWidth / sprite.frameWidth), (newHeight / sprite.frameHeight));
             hitboxVisual = visual;
-
-            spriteManager = new AnimationManager(hitboxSprite, false); // Setting up hitbox visualization
         }
         
         // ========================================================== GENERAL ==========================================================
@@ -85,19 +84,28 @@ namespace Alakoz.Collision
         public void removeIgnore(CollisionObject toIgnore) { ignoreObjects.Remove(toIgnore); }
 
         public void update_Position(Vector2 updatedPosition) { position = updatedPosition; }
+        public void setHitstop(int amount){ if (owner == null) return; owner.hitStop = amount;}
         
 
 
         // ========================================================== UPDATING & DRAWING ==========================================================
 
-        public void Update(GameTime gameTime)
+        public void Draw(SpriteBatch spriteBatch, SpriteEffects spriteEffects)
         {
-            if (hitboxVisual) spriteManager.Update(gameTime);
-        }
-
-        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, Vector2 position, SpriteEffects spriteEffects)
-        {
-            if (hitboxVisual && active) spriteManager.Draw(gameTime, spriteBatch, position, scale, spriteEffects);
+            if (!active) return;
+            spriteBatch.Draw(
+				sprite.Sprite,
+				position,
+                new Rectangle(0 * sprite.frameWidth,
+					0,
+					sprite.frameWidth,
+					sprite.frameHeight),
+				Color.White,
+				0f,
+				Vector2.Zero,
+				scale,
+				spriteEffects,
+				0f) ;
         }
 
         public override void OnCollision(CollisionObject currObject)

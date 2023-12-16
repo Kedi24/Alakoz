@@ -10,6 +10,7 @@ namespace Alakoz.GameInfo
     public enum StateType
     {
         // PLAYER STATES
+        NONE,
         IDLE,
         AIR,
         FALL,
@@ -22,6 +23,9 @@ namespace Alakoz.GameInfo
         JUMP,
         JUMPSTART,
         JUMPEND,
+        WALLJUMP,
+        WALLJUMPSTART,
+        WALLCLING,
         BALL,
         BALLSTART,
         BALLEND,
@@ -32,6 +36,8 @@ namespace Alakoz.GameInfo
         SKILL,
         HIT,
         HITSTART,
+
+        DOORENTER,
         SYMBOL, // Placeholder for unimplemented animations
         HURTBOX, // Just for convenience, will delete later
         HITBOX, // Just for convenience, will delete later

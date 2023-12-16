@@ -9,11 +9,11 @@ using Alakoz.Animate;
 using Alakoz.Collision;
 
 
-namespace Alakoz.LivingBeings
+namespace Alakoz.GameObjects
 {
     // A representation of a Door
 
-    public abstract class Door : Species
+    public abstract class Door : GameObject
     {
         // ------ DOOR ------ //
         public static Dictionary<int, Door> allDoors; // all the Doors in the curret level
@@ -45,11 +45,10 @@ namespace Alakoz.LivingBeings
 		public SpriteEffects flip;
 
         // ------ STATES ------ //
+        public StateType currentState;
+		public StateType previousState;
         public int stateFrame; 		
         public float stateTimer;
-        public bool haltState = false; // To prevent the states from being modified in both the Player class and this class.
-	
-		public const float FPS24 = AnimationManager.FPS24;
 
         // ----- OTHER ----- //
         public SpriteFont stateFONT { get; set; }

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Content;
 
 using Alakoz.Animate;
 using Alakoz.GameInfo;
+using Alakoz.GameObjects;
 
 namespace Alakoz.Collision
 {
@@ -35,7 +36,7 @@ namespace Alakoz.Collision
         public virtual CollisionShape getBounds() { return new CollisionShape(getPosition().X, getPosition().Y, width, height); }
 
         // ----- ANIMATION ----- //
-        public static Dictionary<CollisionType, Animation> collisionSprites {get; set;}
+        public static Dictionary<CollisionType, Animation> CollisionSprites = GameObjectAsset.CollisionAnimations;
 
         // ========================================== LOADING ==========================================
         public static void LoadVisuals(ContentManager Content)
@@ -45,7 +46,7 @@ namespace Alakoz.Collision
             Animation hurtboxSprite = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
             Animation hitboxSprite = new Animation(Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
 
-            collisionSprites = new Dictionary<CollisionType, Animation>
+            CollisionSprites = new Dictionary<CollisionType, Animation>
             {
                 { CollisionType.HURTBOX, hurtboxSprite },
                 { CollisionType.HITBOX, hitboxSprite }

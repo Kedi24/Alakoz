@@ -9,9 +9,9 @@ using Alakoz.Collision;
 
 
 using TiledCS;
-namespace Alakoz.LivingBeings
+
+namespace Alakoz.GameObjects
 {
-	
 	public abstract class Species
 	{
 
@@ -55,9 +55,9 @@ namespace Alakoz.LivingBeings
 		public int hitstun;
 		public int health;
 
-		public List<CollisionObject> activeCollisions = new List<CollisionObject>();
-		
 		// ------ COLLISION ------- //
+		public List<CollisionObject> activeCollisions = new List<CollisionObject>();
+		public int hitStop = 0; // Number of frames to "pause" the state timer.
 
 		public Hurtbox hurtbox {get; set;}
 		public Hitbox hitbox {get; set;}

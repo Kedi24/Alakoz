@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-using Alakoz.LivingBeings;
+using Alakoz.GameObjects;
 
 using MonoGame.Extended;
 
@@ -29,7 +29,7 @@ namespace Alakoz.GameInfo
         // ========================================== GENERAL ==========================================
 
         // ========================================== UPDATING ==========================================
-        public void Update(GameTime gameTime, Species target)
+        public void Update(GameTime gameTime, GameObject target)
         {
             if (Keyboard.GetState().IsKeyDown(Keys.Z)) cameraView.ZoomIn(0.1f);
             else if (Keyboard.GetState().IsKeyDown(Keys.X)) cameraView.ZoomOut(0.1f);

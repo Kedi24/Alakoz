@@ -5,9 +5,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-using Alakoz.Animate;
-using Alakoz.Input;
-using Alakoz.LivingBeings;
 using Alakoz.GameInfo;
 
 namespace Alakoz.Collision

@@ -5,11 +5,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-using Alakoz.Animate;
-using Alakoz.Input;
-using Alakoz.LivingBeings;
-using Alakoz.Collision;
-
 using TiledCS;
 
 namespace Alakoz.Collision{
@@ -59,9 +54,8 @@ namespace Alakoz.Collision{
         // Currently the code only checks for rectangle <-> rectangle collision. Other collision methods can be added later
         // ------------------------------------------ Top
         public bool topIntersection(CollisionShape shapeA)
-        {
-            
-            return (bottom >  shapeA.top) && (top <  shapeA.top) && (right >  shapeA.left) && (left < shapeA.right) ;
+        {    
+            return (bottom > shapeA.top) && (top < shapeA.top) && (right > shapeA.left) && (left < shapeA.right);
         }
         
         // ------------------------------------------ Bottom
@@ -73,13 +67,13 @@ namespace Alakoz.Collision{
         // ------------------------------------------ Left
         public bool leftIntersection(CollisionShape shapeA) 
         {
-            return (right >= shapeA.left) && (left <=  shapeA.left) &&  (top <=  shapeA.bottom) && (bottom >=  shapeA.top);
+            return (right >= shapeA.left) && (left < shapeA.left) &&  (top <= shapeA.bottom) && (bottom >= shapeA.top);
         }
         
         // ------------------------------------------ Right
         public bool rightIntersection(CollisionShape shapeA)
         {
-            return (left <= shapeA.right) && (right >= shapeA.right) && (top <=  shapeA.bottom) && (bottom >=  shapeA.top);
+            return (left <= shapeA.right) && (right > shapeA.right) && (top <= shapeA.bottom) && (bottom >= shapeA.top);
         }
        
         // ------------------------------------------ Any
@@ -87,6 +81,11 @@ namespace Alakoz.Collision{
         {   
             // Boolean values for each type of intersection
             return leftIntersection(shapeA) || rightIntersection(shapeA) || topIntersection(shapeA) || bottomIntersection(shapeA);
+        }
+
+        public bool isInside(CollisionShape shapeA)
+        {
+            return leftIntersection(shapeA) && rightIntersection(shapeA) && topIntersection(shapeA) && bottomIntersection(shapeA);
         }
 
 

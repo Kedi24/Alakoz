@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Input;
 
 using Alakoz.Animate;
 using Alakoz.Input;
-using Alakoz.LivingBeings;
+using Alakoz.GameObjects;
 using Alakoz.GameInfo;
 
 namespace Alakoz.Collision
@@ -37,7 +37,6 @@ namespace Alakoz.Collision
     
         public enemyHurtbox(Enemy newOwner, Vector2 newPosition, float newWidth, float newHeight)
         { 
-
             position = newPosition; // Top left corner + the amount to offset the hurtbox by
             width = newWidth;
             height = newHeight;
@@ -47,18 +46,11 @@ namespace Alakoz.Collision
             type = CollisionType.ENEMYHURTBOX;
             owner = newOwner;
             currBounds = new CollisionShape(left, top, width, height);
+
+            sprite = CollisionSprites[CollisionType.HURTBOX];
         }
         public enemyHurtbox(Enemy newOwner, Vector2 newPosition, float newWidth, float newHeight, bool visual) :this(newOwner, newPosition, newWidth, newHeight)
         { 
-            hurtboxVisual = visual;
-        }
-
-        // Constructor Overload, this is so that hurtbox sprites can be visualized 
-        public enemyHurtbox(Enemy newOwner, Vector2 newPosition, float newWidth, float newHeight, Animation hurtboxSprite, bool visual) :this(newOwner, newPosition, newWidth, newHeight)
-        { 
-            sprite = hurtboxSprite;
-            spriteManager = new AnimationManager(hurtboxSprite, false); // Setting up hitbox visualization
-            scale = new Vector2((newWidth / sprite.frameWidth), (newHeight / sprite.frameHeight));
             hurtboxVisual = visual;
         }
 
@@ -71,15 +63,22 @@ namespace Alakoz.Collision
         public override void OnCollision(CollisionObject currObject)  { base.OnCollision(currObject); }
 
         // ========================================================== UPDATING & DRAWING ==========================================================
-        public void Update(GameTime gameTime)
-        {
-            update_Position(owner.position);
-            if (hurtboxVisual) spriteManager.Update(gameTime);
-        }
 
-        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, Vector2 position, SpriteEffects spriteEffects)
+        public void Draw(SpriteBatch spriteBatch, SpriteEffects spriteEffects)
         {
-            if (hurtboxVisual) spriteManager.Draw(gameTime, spriteBatch, position, scale, spriteEffects);
+            spriteBatch.Draw(
+				sprite.Sprite,
+				position,
+                new Rectangle(0 * sprite.frameWidth,
+					0,
+					sprite.frameWidth,
+					sprite.frameHeight),
+				Color.White,
+				0f,
+				Vector2.Zero,
+				scale,
+				spriteEffects,
+				0f) ;
         }
 
         // ========================================================== COLLISION CODE ==========================================================

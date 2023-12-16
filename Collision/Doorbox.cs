@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Alakoz.GameInfo;
 using Alakoz.Animate;
 using Alakoz.Collision;
-using Alakoz.LivingBeings;
+using Alakoz.GameObjects;
 
 namespace Alakoz.Collision
 {
@@ -32,7 +32,7 @@ namespace Alakoz.Collision
             height = newHeight;
             sendPosition = newOwner.endPosition;
 
-            sprite = collisionSprites[CollisionType.HURTBOX];
+            sprite = CollisionSprites[CollisionType.HURTBOX];
             scale = new Vector2((newWidth / sprite.frameWidth), (newHeight / sprite.frameHeight));
             
             // Just for convenience, the collision bounds will be displayed.
@@ -86,7 +86,7 @@ namespace Alakoz.Collision
 
         public override void hurtboxCollision(Hurtbox currObject)
         {
-            if (getBounds().isIntersecting(currObject.getBounds())) owner.hovering = true;
+            if (getBounds().isInside(currObject.getBounds())) owner.hovering = true;
             else owner.hovering = false;
         }
 
