@@ -5,9 +5,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-using Alakoz.Animate;
-using Alakoz.Input;
-using Alakoz.LivingBeings;
 using Alakoz.GameInfo;
 
 namespace Alakoz.Collision
@@ -60,36 +57,6 @@ namespace Alakoz.Collision
         public override void platformCollision(Platform currObject)
         {
 
-        }
-
-        // ################################################### OLD STUFF JUST INCASE 
-        public void OldCollisionCode(Player player)
-        {
-        // Unlike ground collision, platforms only detect interesctions with the top of the object   
-
-            float heightOffset = top - player.hurtbox.height;
-
-            // Positions of the next position based on velocity, acceleration and hurtbox size
-            float pLeft = player.nextPosition.X;
-            float pRight = player.nextPosition.X + player.hurtbox.width;
-            float pTop = player.nextPosition.Y;
-            float pBottom = player.nextPosition.Y + player.hurtbox.height; 
-
-            // Player intersects the top of the object
-            bool topIntersection = ( pBottom >=  top && pTop <=  top && pRight >=  left && pLeft <=  right ); 
-
-            if ( topIntersection ) 
-            {
-                if (player.position.Y <= heightOffset){ // player approaches from above
-
-                    // Offset the player vertically
-                    player.numJumps = 1;
-				    player.grounded = true;
-				    player.jumping = false;
-                    player.velocity.Y = 0;
-                    player.position.Y =  top - player.hurtbox.height;
-                };
-            };  
         }
     }        
 }

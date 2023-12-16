@@ -4,15 +4,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using Alakoz.Animate;
-using Alakoz.Input;
-using Alakoz.LivingBeings;
+using Alakoz.GameInfo;
 using Alakoz.Collision;
 
 
 using TiledCS;
-namespace Alakoz.LivingBeings
+
+namespace Alakoz.GameObjects
 {
-	
 	public abstract class Species
 	{
 
@@ -56,9 +55,9 @@ namespace Alakoz.LivingBeings
 		public int hitstun;
 		public int health;
 
-		public List<CollisionObject> activeCollisions = new List<CollisionObject>();
-		
 		// ------ COLLISION ------- //
+		public List<CollisionObject> activeCollisions = new List<CollisionObject>();
+		public int hitStop = 0; // Number of frames to "pause" the state timer.
 
 		public Hurtbox hurtbox {get; set;}
 		public Hitbox hitbox {get; set;}
@@ -74,8 +73,8 @@ namespace Alakoz.LivingBeings
 		public AnimationManager animManager;
 
 		// ------ STATES ------- //
-		public string currentState;
-		public string previousState;
+		public StateType currentState;
+		public StateType previousState;
 		// ========================================== UPDATING ==========================================
         // public abstract void Update();
 

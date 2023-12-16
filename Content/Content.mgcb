@@ -82,6 +82,102 @@
 /processorParam:TextureFormat=Compressed
 /build:Alakoz Content/Fonts/TestFont.spritefont
 
+#begin Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_Close.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_Close.png
+
+#begin Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_CloseStart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_CloseStart.png
+
+#begin Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_FadeIn.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_FadeIn.png
+
+#begin Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_FadeOut.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_FadeOut.png
+
+#begin Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_Idle.png
+
+#begin Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_Open.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_Open.png
+
+#begin Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_OpenStart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_OpenStart.png
+
+#begin Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_Unlock.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Maps/MapObjects/Doors/Door - Small/SmallDoor_Unlock.png
+
 #begin Alakoz Content/Maps/TestMaps/Map - Desert/Desert_Tileset2.tsx
 /copy:Alakoz Content/Maps/TestMaps/Map - Desert/Desert_Tileset2.tsx
 
@@ -397,6 +493,18 @@
 /processorParam:TextureFormat=Color
 /build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_DashStart.png
 
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_DoorEnter.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_DoorEnter.png
+
 #begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Fall.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -469,6 +577,18 @@
 /processorParam:TextureFormat=Color
 /build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_JumpStart.png
 
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_None.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_None.png
+
 #begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Run.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -481,6 +601,18 @@
 /processorParam:TextureFormat=Color
 /build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Run.png
 
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_RunStart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_RunStart.png
+
 #begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Runstop.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -492,4 +624,40 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Runstop.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_WallCling.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_WallCling.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_WallJump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_WallJump.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_WallJumpStart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_WallJumpStart.png
 

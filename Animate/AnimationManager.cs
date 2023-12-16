@@ -5,12 +5,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-using Alakoz.Animate;
-using Alakoz.Input;
-using Alakoz.LivingBeings;
-using Alakoz.Collision;
-using Alakoz.GameInfo;
-
 namespace Alakoz.Animate
 {
 	public class AnimationManager
@@ -20,12 +14,12 @@ namespace Alakoz.Animate
 		private float _timer; // Stopwatch for the animation
 		private int _frame = 0;
 		private string _frameMSG = "";
-		private bool _paused; // to Pause the animation
+		private bool _paused = false; // to Pause the animation
 		private bool displayFrames { get; set; }
 		public bool isDone { get; set; } // Checks if the animation is finished
 		public Vector2 Position { get; set; } // Position of the animation
 		private Animation _animation {get; set;} // Corresponding animation
-		public Stack<Animation> animationStack {get; set;} // Stack of animations to play in sequence
+		private Stack<Animation> _animationStack {get; set;} // Stack of animations to play in sequence
 		private Animation _tempAnimation {get; set;} // Just to store the looping animation when popping from the stac
 		public SpriteFont frameFont { get; set; } // Display message font
 
@@ -34,26 +28,27 @@ namespace Alakoz.Animate
 		{
 			_animation = newAnimation;
 			displayFrames = display;
-			animationStack = new Stack<Animation>();
+			_animationStack = new Stack<Animation>();
 		}
 		
 		// ========================================================== STACK FUNCTIONS ==========================================================
-		public void Add(Animation newItem){ animationStack.Push(newItem);} // Add an Animation to the stack
-		public void Clear() {animationStack.Clear();} // Clear the Animation stack
-
-		/// Reset the current animation to the beginning
-		public void Reset()
+		public int Frame() {return _frame;} // Return the current frame of the animation
+		public void Reset() // Reset the current animation to start from the beginning
 		{
 			_timer = 0;
 			_frame = 0;
-			_animation.currentFrame = 0;
 			isDone = false;
 		}
+		public void Clear() {_animationStack.Clear();} // Clear all animations
+		public void Add(Animation newItem){ _animationStack.Push(newItem);} // Add an animation
+		public void Pause(){_paused = true;} // Pause the animation on the current frame
+		public void Resume(){_paused = false;} // Reusme the animation
+		public Animation Remove(){ return _animationStack.Pop();}
 		
 		/// Play the animation at the top of the stack
 		public void Play()
 		{
-			Animation newAnimation = animationStack.Pop();
+			Animation newAnimation = _animationStack.Pop();
 			if (_animation == newAnimation) return;
 
 			_animation = newAnimation;
@@ -64,7 +59,7 @@ namespace Alakoz.Animate
 		/// Play the next animation in the stack
 		private void Next()
 		{
-			if (animationStack.Count != 0) Play(); // Play the next animation
+			if (_animationStack.Count != 0) Play(); // Play the next animation
 			else { if (_animation.isLooping) Reset();} // There is only one looping animation which is at the bottom of the stack
 		}
 
@@ -72,6 +67,9 @@ namespace Alakoz.Animate
 
 		public virtual void Update(GameTime gameTime)
 		{
+			// Hold current frame if pauesd
+			if (_paused ) return; 
+
 			// How much time has passed ( in seconds ) since the last update call
 			_timer += (float)gameTime.ElapsedGameTime.TotalSeconds; 
 			
@@ -83,15 +81,12 @@ namespace Alakoz.Animate
 				_timer = _animation.frameSpeed - _timer;
 
 				// Update the frame counts
-				_animation.currentFrame++;
 				_frame++;
 				
 				// This means that the animation is done
-				if (_animation.currentFrame >= _animation.totalFrames) Next();
+				if (_frame >= _animation.totalFrames) Next();
 			}
 		}
-
-
 		// ========================================================== DRAWING ==========================================================
 
 		public virtual void Draw(GameTime gameTime, SpriteBatch spriteBatch, Vector2 position, Vector2 scale, SpriteEffects spriteEffects)
@@ -99,7 +94,7 @@ namespace Alakoz.Animate
 			spriteBatch.Draw(
 				_animation.Sprite,
 				position,
-                new Rectangle(_animation.currentFrame * _animation.frameWidth,
+                new Rectangle(_frame * _animation.frameWidth,
 					0,
 					_animation.frameWidth,
 					_animation.frameHeight),

@@ -1,17 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Transactions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Content;
 
 using Alakoz.Animate;
-using Alakoz.Input;
-using Alakoz.LivingBeings;
-using Alakoz.Collision;
 using Alakoz.GameInfo;
-
-using TiledCS;
+using Alakoz.GameObjects;
 
 namespace Alakoz.Collision
 {
@@ -24,20 +19,41 @@ namespace Alakoz.Collision
     
     public abstract class CollisionObject
     {
-         public Vector2 position;
-
-        public bool active;
-    
-        public CollisionType type;
-
-        public CollisionShape currBounds;
-
-        public CollisionType getType() { return type; }
-        public virtual Vector2 getPosition() { return position; }
-        public virtual CollisionShape getBounds() { return new CollisionShape(getPosition().X, getPosition().Y, width, height); }
+        // ----- PHYSICS ----- // 
+        public Vector2 position;
         public float width {get; set;}
         public float height {get; set;}
 
+        // ----- COLLISION ----- //
+        public bool active;
+        public CollisionType type {get; set;}
+        public CollisionShape currBounds;
+
+        // ----- DISPLAY ----- //
+        public bool displayBound = false;
+    
+        public virtual Vector2 getPosition() { return position; }
+        public virtual CollisionShape getBounds() { return new CollisionShape(getPosition().X, getPosition().Y, width, height); }
+
+        // ----- ANIMATION ----- //
+        public static Dictionary<CollisionType, Animation> CollisionSprites = GameObjectAsset.CollisionAnimations;
+
+        // ========================================== LOADING ==========================================
+        public static void LoadVisuals(ContentManager Content)
+        {
+            string effectDirectory = "Alakoz Content/Effects/General/";
+
+            Animation hurtboxSprite = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
+            Animation hitboxSprite = new Animation(Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
+
+            CollisionSprites = new Dictionary<CollisionType, Animation>
+            {
+                { CollisionType.HURTBOX, hurtboxSprite },
+                { CollisionType.HITBOX, hitboxSprite }
+            };
+        }
+
+        // ========================================== GENERAL ==========================================
         // Finds the corresponding collision method
         public virtual void OnCollision(CollisionObject currObject) 
         {
@@ -58,7 +74,7 @@ namespace Alakoz.Collision
             }
 
         }
-        // --------------------------------------------------- COLLISION CODE ---------------------------------------------------
+        // ========================================== COLLISION CODE ==========================================
         public abstract void hurtboxCollision(Hurtbox currObject);
 
         public abstract void hitboxCollision(Hitbox currObject);

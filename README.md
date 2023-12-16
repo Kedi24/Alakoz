@@ -22,10 +22,15 @@ For basic movement, use the `W` `A` `S` `D` keys to jump, move left, move right,
 
 https://github.com/Kedi24/Alakoz/assets/117780105/cb26cce4-1004-49a3-87f1-6e40b6b16910
 
-#### Walljumping
-You can also perform walljump while airborne and near a wall. To execute a wall jump, hold into the direction of the wall you would like to jump off of, then press the jump button, `W`.
+#### Wallcling
+In Alakoz, you can cling to the sides of walls. Clinging to a wall will decrease your falling speed, making it easier to get a better view of any obstacles below you or to time a jump. While airborne, simply hold in the direction of the wall that you would like to cling to. You can exit the cling at any time by pressing in the opposite direction.
 
-https://github.com/Kedi24/Alakoz/assets/117780105/2baa7f07-10c3-478a-94e9-c04f4ab248dc
+https://github.com/Kedi24/Alakoz/assets/117780105/dbd7a75c-ca20-4ae5-a098-bd2cc4335b82
+
+#### Wall jumping
+While clinging to a wall, you can also perform a wall jump. To execute a wall jump, you must first cling to a wall as mentioned before. Once on the wall, simply tap the jump button, `W`, to perform the wall jump. If you come into contact with another wall during the wall jump, you will be able to perform more wall jumps in quick succession. Wall jumping is a useful tool to reach places where a normal jump can't reach. 
+
+https://github.com/Kedi24/Alakoz/assets/117780105/caefff46-5f6b-48b1-90ff-f23fe02038fe
 
 #### Dashing
 Dashing is a mobility option that gives you a burst of speed in the direction you are facing. To perform a dash, press the `F` key. 
