@@ -421,6 +421,54 @@
 /processorParam:TextureFormat=Color
 /build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_BallStart.png
 
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_BasicAttack1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_BasicAttack1.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_BasicAttack2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_BasicAttack2.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_BasicAttack3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_BasicAttack3.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_BasicAttack4.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_BasicAttack4.png
+
 #begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_Crouch.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -624,6 +672,30 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_Runstop.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_TeleportToAir.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_TeleportToAir.png
+
+#begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_TeleportToGround.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Alakoz Content/Species/Player/Rebel_Animations/Rebel_TeleportToGround.png
 
 #begin Alakoz Content/Species/Player/Rebel_Animations/Rebel_WallCling.png
 /importer:TextureImporter
