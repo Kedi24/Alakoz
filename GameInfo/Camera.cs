@@ -24,7 +24,7 @@ namespace Alakoz.GameInfo
         {
             var viewportAdapter = new BoxingViewportAdapter(gameWindow, graphicsDevice, width, height);
             cameraView = new OrthographicCamera(viewportAdapter);
-            cameraView.ZoomIn(1f); // Default zoom
+            // cameraView.ZoomIn(1f); // Default zoom
         }
         // ========================================== GENERAL ==========================================
 

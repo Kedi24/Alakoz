@@ -16,12 +16,18 @@ namespace Alakoz.GameObjects
 {
     public abstract class GameObject
     {
+        public GameObjectType type = GameObjectType.NONE;
         public Vector2 position;
         public Vector2 velocity;
+        public Vector2 origin;
+        public Vector2 originOffset;
         
         // ------ COLLISION ------ //
 		public List<CollisionObject> activeCollisions = new List<CollisionObject>();
         public int hitStop = 0; // Number of frames to "pause" the state timer.
+        public bool applyKB = false;
+
+        public bool applyAttackBounce = false; // For air attacks. When a hit lands the object bounce/not fall
 
         // ------ ANIMATION ----- //
         public AnimationManager animManager;
@@ -181,6 +187,19 @@ namespace Alakoz.GameObjects
             Animation ball = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Ball"), 12, true, 0.012f);
             Animation ballEnd = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BallEnd"), 2, false);
 
+            Animation basicAttack1 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack1"), 20, false);
+            Animation basicAttack2 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack2"), 22, false);
+            Animation basicAttack3 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack3"), 23, false);
+            Animation basicAttack4 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack4"), 23, false);
+
+            Animation airAttack1 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack1"), 20, false);
+            Animation airAttack2 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack2"), 22, false);
+            Animation airAttack3 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack3"), 23, false);
+
+            Animation teleportToGround = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_TeleportToGround"), 14, false);
+            Animation teleportToAir = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_TeleportToAir"), 4, false);
+
+
             Animation hitStart = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_HitStart"), 8, false);
             Animation hit = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Hit"), 16);
 
@@ -191,27 +210,49 @@ namespace Alakoz.GameObjects
                 { StateType.SYMBOL, Symbol },
                 { StateType.NONE, None },
                 { StateType.IDLE, idle },
+                // Run
                 { StateType.RUN, run },
                 { StateType.RUNSTART, runStart },
                 { StateType.RUNEND, runEnd },
+                // Jump and Fall
                 { StateType.JUMPSTART, jumpStart },
                 { StateType.JUMP, jump },
                 { StateType.FALL, falling },
+                // Crouch
                 { StateType.CROUCH, crouch },
                 { StateType.CROUCHSTART, crouchStart },
                 { StateType.CROUCHEND, crouchEnd },
+                // Walljump
                 { StateType.WALLCLING, wallCling },
                 { StateType.WALLJUMPSTART, walljumpStart },
                 { StateType.WALLJUMP, walljump },
+                // Dash
                 { StateType.DASH, dash },
                 { StateType.DASHSTART, dashStart },
                 { StateType.DASHEND, dashEnd },
+                
+
+                // Attacking
+                { StateType.BASICATTACK1, basicAttack1 },
+                { StateType.BASICATTACK2, basicAttack2 },
+                { StateType.BASICATTACK3, basicAttack3 },
+                { StateType.BASICATTACK4, basicAttack4 },
+
+                { StateType.AIRATTACK1, airAttack1 },
+                { StateType.AIRATTACK2, airAttack2 },
+                { StateType.AIRATTACK3, airAttack3 },
+
+                // Damaged
+                { StateType.HIT, hit },
+                { StateType.HITSTART, hitStart },
+                { StateType.DOORENTER, doorEnter },
+
+                // Misc
+                { StateType.TOGROUND, teleportToGround },
+                { StateType.TOAIR, teleportToAir},
                 { StateType.BALL, ball },
                 { StateType.BALLSTART, ballStart },
                 { StateType.BALLEND, ballEnd },
-                { StateType.HIT, hit },
-                { StateType.HITSTART, hitStart },
-                { StateType.DOORENTER, doorEnter }
             };
         }
 
@@ -219,6 +260,8 @@ namespace Alakoz.GameObjects
         {
             string enemyDirectory = "Alakoz Content/Species/Player/Base_Animations/";
             string effectDirectory = "Alakoz Content/Effects/General/";
+            string playerDirectory = "Alakoz Content/Species/Player/Rebel_Animations/";
+
             
             Animation Symbol = new Animation(Content.Load<Texture2D>( enemyDirectory + "ball"), 1);
             Animation SymbolNonLooping = new Animation(Content.Load<Texture2D>( enemyDirectory + "ball"), 1, false);
@@ -232,6 +275,9 @@ namespace Alakoz.GameObjects
             Animation turnaround = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Turnaround"), 12);
             Animation jump = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Jump"), 10, false);
             Animation falling = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Falling"), 12);
+
+            Animation hitStart = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_HitStart"), 8, false);
+            Animation hit = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Hit"), 16);
 
             EnemyAnimations = new Dictionary<StateType, Animation>
             {
@@ -260,8 +306,8 @@ namespace Alakoz.GameObjects
                 { StateType.BALLSTART, SymbolNonLooping },
                 { StateType.BALLEND, SymbolNonLooping },
                 
-                { StateType.HIT, Symbol }, // Hit
-                { StateType.HITSTART, SymbolNonLooping }
+                { StateType.HIT, hit }, // Hit
+                { StateType.HITSTART, hitStart }
             };
         }
 
@@ -319,6 +365,7 @@ namespace Alakoz.GameObjects
             CollisionAnimations = new Dictionary<CollisionType, Animation>
             {
                 { CollisionType.HURTBOX, hurtboxSprite },
+                { CollisionType.ENEMYHURTBOX, hurtboxSprite },
                 { CollisionType.HITBOX, hitboxSprite }
             };
         }

@@ -28,29 +28,35 @@ namespace Alakoz.Collision
         public bool active;
         public CollisionType type {get; set;}
         public CollisionShape currBounds;
+        public Animation sprite;
 
         // ----- DISPLAY ----- //
-        public bool displayBound = false;
     
         public virtual Vector2 getPosition() { return position; }
         public virtual CollisionShape getBounds() { return new CollisionShape(getPosition().X, getPosition().Y, width, height); }
 
         // ----- ANIMATION ----- //
         public static Dictionary<CollisionType, Animation> CollisionSprites = GameObjectAsset.CollisionAnimations;
-
-        // ========================================== LOADING ==========================================
-        public static void LoadVisuals(ContentManager Content)
+        
+        // ========================================== DRAWING ==========================================
+        public virtual void Draw(SpriteBatch spriteBatch, SpriteEffects spriteEffects, Color color, Vector2 position, float newWidth, float newHeight)
         {
-            string effectDirectory = "Alakoz Content/Effects/General/";
-
-            Animation hurtboxSprite = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
-            Animation hitboxSprite = new Animation(Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
-
-            CollisionSprites = new Dictionary<CollisionType, Animation>
-            {
-                { CollisionType.HURTBOX, hurtboxSprite },
-                { CollisionType.HITBOX, hitboxSprite }
-            };
+            sprite = CollisionSprites[type];
+            Vector2 scale = new Vector2((newWidth / sprite.frameWidth), (newHeight / sprite.frameHeight));
+            // To draw the next position
+            spriteBatch.Draw(
+				sprite.Sprite,
+				position,
+                new Rectangle(0 * sprite.frameWidth,
+					0,
+					sprite.frameWidth,
+					sprite.frameHeight),
+				color,
+				0f,
+				Vector2.Zero,
+				scale,
+				spriteEffects,
+				0f);
         }
 
         // ========================================== GENERAL ==========================================

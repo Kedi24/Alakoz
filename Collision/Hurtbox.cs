@@ -23,7 +23,6 @@ namespace Alakoz.Collision
         public Vector2 origin; 
         public Vector2 scale {get; set;}
         public Vector2 offset {get; set;}
-        public Animation sprite;
         public Player owner; // The entity that owns this hurtbox
 
         public float left {get {return getPosition().X;} set{;}}
@@ -109,20 +108,7 @@ namespace Alakoz.Collision
         // ========================================================== UPDATING & DRAWING ==========================================================
         public void Draw(SpriteBatch spriteBatch, SpriteEffects spriteEffects)
         {
-                // Draw the current position
-                spriteBatch.Draw(
-				sprite.Sprite,
-				position,
-                new Rectangle(0 * sprite.frameWidth,
-					0,
-					sprite.frameWidth,
-					sprite.frameHeight),
-				Color.White,
-				0f,
-				Vector2.Zero,
-				scale,
-				spriteEffects,
-				0f) ;
+                base.Draw(spriteBatch, SpriteEffects.None, Color.White, position, width, height);
             
                 // To draw the NextPosition
                 spriteBatch.Draw(
@@ -165,19 +151,23 @@ namespace Alakoz.Collision
                     owner.hitstun = currObject.hitstun;
                     owner.applyFall = true;
                     resetDimensions();
-
-                    // Add hitstop. For now it is 7 for weak hits and 15 for strong
-                    if (owner.health <= 0) owner.hitStop = 15; 
-                    else owner.hitStop = 7;
-
-                    currObject.setHitstop(7);
-                    currObject.append(this);
+                    if (owner.health <= 0)
+                    {
+                        owner.hitStop = Hitbox.KILL;
+                        currObject.setHitstop(Hitbox.KILL);
+                    } 
+                    else 
+                    {
+                        owner.hitStop = currObject.hitstop;
+                        currObject.setHitstop(currObject.hitstop);
+                    }
+                    currObject.addCollision(this);
                 }
             }
             
-            if (owner.hitstun == 0 && currObject.isColliding(this))
+            if ((owner.hitstun == 0 || !currObject.active) && currObject.isColliding(this))
             {
-                currObject.remove(this);
+                currObject.removeCollision(this);
             }
         }
 
@@ -257,8 +247,8 @@ namespace Alakoz.Collision
 				    owner.grounded = true;
                     
                     // Modify the acccleration based on whether or not its grounded
-				    owner.acceleration = owner.groundAccel;
-				    owner.speed = owner.groundSpeed;
+				    // owner.acceleration = owner.groundAccel;
+				    // owner.speed = owner.groundSpeed;
 				    
                     // Offset the player vertically
                     owner.jumping = false;

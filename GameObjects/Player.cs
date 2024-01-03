@@ -32,34 +32,35 @@ namespace Alakoz.GameObjects
 		public bool applyFall = true;
 		public float gravity = 0.3f;
 		public float speed = 2f; // Default speed
-		public float airSpeed = 1f;
 		public float fallSpeed = 1f;
-		public float wallFallSpeed = 0.5f;
-		public float groundSpeed = 1f;
+
 		public float velocityMax = 4f;
-		public float terminalVelocity = 10f;
-		public float accelMin = 0.1f;
+		public float terminalVelocity = 8f;
 		public float acceleration = 0.2f; // Default acceleration
-		public float deceleration = 0.4f; // Default deceleration
-		public float airAccel = 0.2f;
-		public float airDecel = 0.2f;
-		public float groundAccel = 0.3f;
-		public float groundDecel = 0.1f;
+		public float deceleration = 0.1f; // Default deceleration
+
 
 		// ---- Moving
 		public int direction = 1;
 		public bool move_left = false;
 		public bool move_right = false;
+		public bool move_up = false;
+		public bool move_down = false;
 		public bool grounded = false;
 		
 		// ---- Jumping
 		public bool jumping = false;
 		public int numJumps = 1;
+		public int jumpDelay = 1;
 		public bool softJumping = false;
 		public bool wallJumping = false;
 		public bool wallCollide = false; // Indicates a wall collision
 		public int wallBuffer = 0; // To prevent immediate wall interactions
 		public int wallCooldown = 80;
+		public float wallFallSpeed = 0.5f;
+
+		// ---- Crouching
+		public bool crouching = false;
 		
 		// ---- Dashing
 		public bool dashing = false;
@@ -67,11 +68,9 @@ namespace Alakoz.GameObjects
 		public int dashCooldown = 15;
 		public float dashSpeed = 6f;
 
-		// ---- Crouching
-		public bool crouching = false;
-
 		// ---- Attacking
 		public bool attacking = false;
+		public int attackCounter = 0;
 
 		// ---- Hit 
 		public bool hit = false;
@@ -95,11 +94,13 @@ namespace Alakoz.GameObjects
 		public Hitbox hitbox3 {get; set;}
 		public Vector2 hitboxPosition = new Vector2(32f, 15f); // For the players attack, will change later
 		public Vector2 KB; // The knockback from the hitbox that interescts the player
-		public bool applyKB = false;
 		public float hurtboxWidth = 34;
 		public float hurtboxHeight = 44;
 		public bool hurtboxVisual = true;
-		Vector2 spriteCoordinate = new Vector2(-39, -36); // Placement of sprite in relation to the hurtbox. Calculated with aesprite
+
+		// ---- Attack hitboxes
+		public Hitbox[] allHitboxes = new Hitbox[5]; // Array to store a preset number of hitboxes 
+		
 
 
 		// ------ ANIMATION ------ //
@@ -108,7 +109,8 @@ namespace Alakoz.GameObjects
 		public StateType previousAnimation;
 		public StateType tempAnimation;
 		public ArrayList preAnimations;
-
+		Vector2 spriteCoordinate = new Vector2(-39, -36); // Placement of sprite in relation to the hurtbox. Calculated with aesprite
+		
 		// ------ SKILLS ------ //
 
 
@@ -128,35 +130,39 @@ namespace Alakoz.GameObjects
 		public StateType previousState;
 		public Player(Dictionary<StateType, Animation> newSprites, Vector2 newPosition)
 		{
+			type = GameObjectType.PLAYER;
+			previousState = StateType.AIR;
+			currentState = StateType.AIR;
+
 			position = newPosition;
 			spawnPoint = newPosition;
+			originOffset = new Vector2((hurtboxWidth / 2), (hurtboxHeight / 2));
+			origin = position + originOffset;
 
 			hurtbox = new Hurtbox(this, position, hurtboxWidth, hurtboxHeight, true);
-			
-			// Hitboxes just to test primitive attacks. Will modify later
-			hitbox = new Hitbox(position + hitboxPosition, 32f, 20f, 3, new Vector2(1f, 0f), 2, 10, true);
-			hitbox2 = new Hitbox(position + hitboxPosition, 32f, 30f, 3, new Vector2(1f, 0f), 5, 10, true);
-			hitbox3= new Hitbox(position + hitboxPosition, 32f, 40f, 3, new Vector2(5f, -5f), 10, 20, true);
-			
-			hitbox.active = false;
-			hitbox2.active = false;
-			hitbox3.active = false;
-			
-			hitbox.addIgnore(hurtbox); // Prevent the player from hitting themselves
-			hitbox2.addIgnore(hurtbox);
-			hitbox3.addIgnore(hurtbox);
 
+			// Add hitboxes and hurtboxes to collision objects
+			// There is space for, at most, 5 hitboxes on a single frame
+			for (int i = 0; i < 5; i++) 
+			{
+				allHitboxes[i] = Hitbox.Zero;
+				allHitboxes[i].owner = this;
+				allHitboxes[i].addIgnore(hurtbox); // To prevent dealing damage to yourself
+				activeCollisions.Add(allHitboxes[i]);
+			}
+					
 			activeCollisions.Add(hurtbox);
 
 			stateFrame = 0;
 			stateTimer = 0f;
-			currentState = StateType.AIR;
-			previousState = StateType.IDLE;
 
             animations = newSprites;
             animManager = new AnimationManager(newSprites[StateType.FALL], true);
             animManager.Position = position;
+
 			currentAnimation = StateType.FALL;
+			tempAnimation = StateType.FALL;
+
 			preAnimations = new ArrayList();
 
             controls = new Controls();
@@ -172,7 +178,7 @@ namespace Alakoz.GameObjects
 		// ------------------------------ Basic
         private void move()
         {
-            if (direction == 0) 
+            if (direction == -1) 
 			{
 				velocity.X = approach(velocity.X, -velocityMax, speed * acceleration);
 			}
@@ -254,8 +260,6 @@ namespace Alakoz.GameObjects
 			}
 			velocity.Y = 0f;
 
-			acceleration = accelMin;
-
             numDashes = 0;
 			grounded = false;
 		}		
@@ -266,116 +270,7 @@ namespace Alakoz.GameObjects
 			velocity.Y = KB.Y;
 			applyKB = false;
 		} 
-		// ------------------------------ Attacks
-		private void groundAttack()
-		{	
-			if (stateFrame == 6)
-			{
-				hitbox.active = true;
-				activeCollisions.Add(hitbox); // Add collision to the list of collisions to check
-			}
-			else if (stateFrame == 8)
-			{
-				hitbox.active = false;
-				activeCollisions.Remove(hitbox); // Attack has ended
-			}
-			else if (stateFrame == 10)
-			{
 
-				hitbox2.active = true;
-				activeCollisions.Add(hitbox2); // Add collision to the list of collisions to check
-			}
-			else if (stateFrame == 12)
-			{
-				hitbox2.active = false;
-				activeCollisions.Remove(hitbox2); // Attack has ended
-				
-			}
-			else if (stateFrame == 17)
-			{
-
-				hitbox3.active = true;
-				activeCollisions.Add(hitbox3); // Add collision to the list of collisions to check
-			}
-			else if (stateFrame == 20)
-			{
-				hitbox3.active = false;
-				activeCollisions.Remove(hitbox3); // Attack has ended
-			}
-			else if (stateFrame == 25) 
-			{
-				attacking = false;
-				set_state(StateType.AIR);
-				
-				tempAnimation = StateType.FALL;
-				air_state();
-			}
-			
-		}
-		private void airAttack()
-		{
-			if (stateFrame == 11)
-			{
-				hitbox3.active = true;
-				activeCollisions.Add(hitbox3); // Add collision to the list of collisions to check
-			}
-			else if (stateFrame == 16)
-			{
-				hitbox3.active = false;
-				activeCollisions.Remove(hitbox3); // Attack has ended
-			}	
-			else if (stateFrame == 22) 
-			{
-				attacking = false;
-				set_state(StateType.AIR);
-				tempAnimation = StateType.FALL;
-				air_state();
-			}
-			
-		}
-		private void dashAttack()
-		{
-			if (stateFrame == 11)
-			{
-				hitbox.active = true;
-				activeCollisions.Add(hitbox); // Add collision to the list of collisions to check
-			}
-			else if (stateFrame == 16)
-			{
-				hitbox.active = false;
-				activeCollisions.Remove(hitbox); // Attack has ended
-			}	
-			else if (stateFrame == 22) 
-			{
-				attacking = false;
-				set_state(StateType.AIR);
-				tempAnimation = StateType.FALL;
-				air_state();
-			}
-			
-		}
-		private void crouchAttack()
-		{
-			if (stateFrame == 11)
-			{
-				hitbox.active = true;
-				activeCollisions.Add(hitbox); // Add collision to the list of collisions to check
-			}
-			else if (stateFrame == 16)
-			{
-				hitbox.active = false;
-				activeCollisions.Remove(hitbox); // Attack has ended
-			}	
-			else if (stateFrame == 22) 
-			{
-				attacking = false;
-				set_state(StateType.AIR);
-				tempAnimation = StateType.FALL;
-				air_state();
-			}
-			
-		}
-		
 		//------------------------------ Unique
 		private void walljump() 
 		{
@@ -386,7 +281,7 @@ namespace Alakoz.GameObjects
 
 			// Physics
 			velocity.Y = -7.0f;
-			if (direction == 0) velocity.X = 7f;
+			if (direction == -1) velocity.X = 7f;
 			else velocity.X = -7f;
 
 			// Booleans
@@ -403,42 +298,34 @@ namespace Alakoz.GameObjects
 			if (grounded)
 			{
 				velocity.Y = 0;
-				preAnimations = new ArrayList(){StateType.CROUCHEND};
-				tempAnimation = StateType.IDLE;
-				set_state(StateType.IDLE);
-				idle_state();
+				hurtbox.resetDimensions();
+				set_state(StateType.IDLE, new ArrayList(){StateType.CROUCHEND}, StateType.IDLE);
 			}
-			else if (wallCollide && wallBuffer == 0)
-			{
-				tempAnimation = StateType.WALLCLING;
-				set_state(StateType.WALLCLING);
-				wallCling_state();
+			else if (wallCollide && wallBuffer == 0) 
+			{ 
+				hurtbox.resetDimensions();
+				set_state(StateType.WALLCLING, new ArrayList(){}, StateType.WALLCLING);
 			}
 			else if (jumping) 
 			{
-				preAnimations = new ArrayList(){StateType.JUMPSTART};
-				tempAnimation = StateType.JUMP;
-				set_state(StateType.JUMP);
-				jump_state();
+				hurtbox.changeDimensions(new Vector2(0, -10), 34, 42);
+				set_state(StateType.JUMP, new ArrayList(){StateType.JUMPSTART}, StateType.JUMP);
 			}
 			else if (dashing) 
 			{
-				preAnimations = new ArrayList(){StateType.DASHSTART};
-				tempAnimation = StateType.DASH;
-				set_state(StateType.DASH);
-				dash_state();
+				hurtbox.resetDimensions();
+				set_state(StateType.DASH, new ArrayList(){StateType.DASHSTART}, StateType.DASH);
 			}
 			else if (attacking)
 			{
-				set_state(StateType.ATTACK);
-				attack_state();
+				attackCounter++;
+				set_state(StateType.AIRATTACK1, new ArrayList(){StateType.AIRATTACK1}, StateType.NONE);
 			}
 			else
 			{
-				tempAnimation = StateType.FALL;
 				if (move_left) 
 				{
-					direction = 0;
+					direction = -1;
 					move();
 				}
 				else if (move_right)
@@ -453,109 +340,91 @@ namespace Alakoz.GameObjects
 		{
 			if (!grounded)
 			{
-				set_state(StateType.AIR);
-				tempAnimation = StateType.FALL;
-				air_state();
+				// hurtbox.changeDimensions(new Vector2(0, -10), 34, 42);
+				hurtbox.resetDimensions();
+				set_state(StateType.AIR, new ArrayList(){}, StateType.FALL);
 			}
 			else if (jumping) 
 			{
 				grounded = false;
-				set_state(StateType.JUMP);
-				preAnimations = new ArrayList(){StateType.JUMPSTART};
-				tempAnimation = StateType.JUMP;
-				jump_state();
+				hurtbox.changeDimensions(new Vector2(0, -10), 34, 42);
+				set_state(StateType.JUMP, new ArrayList(){StateType.JUMPSTART}, StateType.JUMP);
 			}
 			else if (move_left) 
 			{
-				direction = 0;
-				preAnimations = new ArrayList(){StateType.RUNSTART};
-				set_state(StateType.RUN);
-				tempAnimation = StateType.RUN;
-				move();
+				hurtbox.resetDimensions();
+				set_state(StateType.RUN, new ArrayList(){StateType.RUNSTART}, StateType.RUN);
 			}
 			else if (move_right)
 			{
-				direction = 1;
-				preAnimations = new ArrayList(){StateType.RUNSTART};
-				set_state(StateType.RUN);
-				tempAnimation = StateType.RUN;
-				move();
+				hurtbox.resetDimensions();
+				set_state(StateType.RUN, new ArrayList(){StateType.RUNSTART}, StateType.RUN);
 			}
 			else if (crouching)
 			{
-				preAnimations = new ArrayList(){StateType.CROUCHSTART};
-				tempAnimation = StateType.CROUCH;
-
 				hurtbox.changeDimensions(new Vector2(0, hurtbox.height / 2), 34, 22);
-				set_state(StateType.CROUCH);
-				crouch_state();
+				set_state(StateType.CROUCH, new ArrayList(){StateType.CROUCHSTART}, StateType.CROUCH);
 			}
 			else if (dashing) 
 			{
-				preAnimations = new ArrayList(){StateType.DASHSTART};
-				tempAnimation = StateType.DASH;
-				set_state(StateType.DASH);
-				dash_state();
+				set_state(StateType.DASH, new ArrayList(){StateType.DASHSTART}, StateType.DASH);
 			}
 			else if (attacking)
 			{
-				set_state(StateType.ATTACK);
-				attack_state();
+				attackCounter++;
+				set_state(StateType.BASICATTACK1, new ArrayList(){StateType.BASICATTACK1}, StateType.NONE);
 			} 
 			else if (beginInteract)
 			{
-				set_state(StateType.INTERACT);
+				set_state(StateType.INTERACT, new ArrayList(){}, tempAnimation);
 				interact_state();
 			}
 		}
 		
 		public void jump_state()
-		{	
-			if (velocity.Y < 0.5 && velocity.Y > -0.5 && stateFrame > 1) // fix later
+		{
+			if (stateFrame < jumpDelay) velocity.Y = 0; // Jump delay
+			if (velocity.Y < 0.5 && velocity.Y > -0.5 && stateFrame > jumpDelay) // fix later
 			{
 				jumping = false;
-				preAnimations = new ArrayList{ StateType.BALLEND, StateType.BALL, StateType.BALLSTART };
-				tempAnimation = StateType.FALL;
-				set_state(StateType.AIR);
-				air_state();
+				hurtbox.resetDimensions();
+				set_state(StateType.AIR, new ArrayList{ StateType.BALLEND, StateType.BALL, StateType.BALLSTART }, StateType.FALL);
 				return;
-			}
-			else if (grounded && stateFrame > 1) // To prevent jump -> idle -> jump... loop 
+			}	
+			else if (grounded) // To prevent jump -> idle -> jump... loop 
 			{
 				jumping = false;
 				velocity.Y = 0;
-				preAnimations = new ArrayList{ StateType.CROUCHEND};
-				tempAnimation = StateType.IDLE;
-				set_state(StateType.IDLE);
-				idle_state();
+				hurtbox.resetDimensions();
+				set_state(StateType.IDLE, new ArrayList{ StateType.CROUCHEND}, StateType.IDLE);
+				
 			}
 			else if (dashing) 
 			{
 				jumping = false;
-				preAnimations = new ArrayList(){StateType.DASHSTART};
-				tempAnimation = StateType.DASH;
-				set_state(StateType.DASH);
-				dash_state();
+				hurtbox.resetDimensions();
+
+				set_state(StateType.DASH, new ArrayList(){StateType.DASHSTART}, StateType.DASH);
 			} 
 			else if (attacking)
 			{
-				set_state(StateType.ATTACK);
-				attack_state();
+				jumping = false;
+				hurtbox.resetDimensions();
+
+				attackCounter++;
+				set_state(StateType.AIRATTACK1, new ArrayList(){StateType.AIRATTACK1}, StateType.NONE);
 			}
 			else if (wallCollide && wallBuffer == 0) 
 			{ 
 				jumping = false;
-
-				tempAnimation = StateType.WALLCLING;
-				set_state(StateType.WALLCLING);
-				wallCling_state();
+				hurtbox.resetDimensions();
+				set_state(StateType.WALLCLING, new ArrayList(){}, StateType.WALLCLING);
 			}
-			else 
+			else
 			{
-				tempAnimation = StateType.JUMP;
 				if (move_left) 
 				{
-					direction = 0;
+					direction = -1;
 					move();
 					
 				}
@@ -564,61 +433,53 @@ namespace Alakoz.GameObjects
 					direction = 1;
 					move();
 				}
-				jump();
+				if (stateFrame == jumpDelay )jump();
 			}
+			
 		}
 		
 		public void run_state()
-		{
-			tempAnimation = StateType.RUN;
-			
+		{	
 			if (!grounded)
 			{
-				preAnimations = new ArrayList(){StateType.BALLEND, StateType.BALL, StateType.BALLSTART};
-				tempAnimation = StateType.FALL;
-				set_state(StateType.AIR);
-				air_state();
+				// hurtbox.changeDimensions(new Vector2(0, -10), 34, 42);
+				hurtbox.resetDimensions();
+				set_state(StateType.AIR, new ArrayList(){StateType.BALLEND, StateType.BALL, StateType.BALLSTART}, StateType.FALL);
 			}
 			else if (jumping) 
 			{
 				grounded = false;
-				preAnimations = new ArrayList(){StateType.JUMPSTART};
-				tempAnimation = StateType.JUMP;
-				set_state(StateType.JUMP);
-				jump_state();
+				hurtbox.changeDimensions(new Vector2(0, -10), 34, 42);		
+				set_state(StateType.JUMP, new ArrayList(){StateType.JUMPSTART}, StateType.JUMP);	
 			}
 			else if (dashing) 
 			{
-				preAnimations = new ArrayList(){StateType.DASHSTART};
-				tempAnimation = StateType.DASH;
-				set_state(StateType.DASH);
-				dash_state();
+				set_state(StateType.DASH, new ArrayList(){StateType.DASHSTART}, StateType.DASH);
 			}
 			else if (attacking)
 			{
-				set_state(StateType.ATTACK);
-				attack_state();
+				attackCounter++;
+				set_state(StateType.BASICATTACK1, new ArrayList(){StateType.BASICATTACK1}, StateType.NONE);
 			} 
-			else if (beginInteract)
+			else if (beginInteract) /// FIX LATER
 			{
 				if (velocity.X > 2.5 || velocity.X < -2.5) preAnimations = new ArrayList{ StateType.RUNEND };
-				tempAnimation = StateType.IDLE;
 				
-				set_state(StateType.INTERACT);
-				interact_state();
+				hurtbox.resetDimensions();
+				set_state(StateType.INTERACT, new ArrayList(){StateType.CROUCHEND}, StateType.IDLE);
 			}
 			else
 			{
 				if (!(move_left || move_right))
 				{
-					if (velocity.X > 2.5 || velocity.X < -2.5) preAnimations = new ArrayList{ StateType.RUNEND };
-					tempAnimation = StateType.IDLE;
-					set_state(StateType.IDLE);
-					idle_state();
+					if (velocity.X > 2.5 || velocity.X < -2.5) set_state(StateType.IDLE, new ArrayList(){ StateType.RUNEND }, StateType.IDLE);
+					else set_state(StateType.IDLE, new ArrayList(){}, StateType.IDLE);
+					
 					return;
-				} else if (move_left) 
+				} 
+				else if (move_left) 
 				{
-					direction = 0;
+					direction = -1;
 					move();
 				}
 				else if (move_right)
@@ -633,56 +494,33 @@ namespace Alakoz.GameObjects
 		{
 			if (!grounded)
 			{
-				tempAnimation = StateType.FALL;
-				preAnimations = new ArrayList(){StateType.BALLEND, StateType.BALL, StateType.BALLSTART};
-				// Update the hurtbox
 				hurtbox.resetDimensions();
-				set_state(StateType.AIR);
-				air_state();
+				set_state(StateType.AIR, new ArrayList(){StateType.BALLEND, StateType.BALL, StateType.BALLSTART}, StateType.FALL);
 			} 
 			else if (!crouching)
 			{
-				preAnimations = new ArrayList(){StateType.CROUCHEND};
-				tempAnimation = StateType.IDLE;
-				// Update the hurtbox
 				hurtbox.resetDimensions();
-				set_state(StateType.IDLE);
-				idle_state();
+				set_state(StateType.IDLE, new ArrayList(){StateType.CROUCHEND}, StateType.IDLE);
 			}
 			else if (jumping)
 			{
-				tempAnimation = StateType.JUMP;
-				preAnimations = new ArrayList(){StateType.JUMPSTART};
-				// Update the hurtbox
-				hurtbox.resetDimensions();
-				set_state(StateType.JUMP);
-				jump_state();	
+				hurtbox.changeDimensions(new Vector2(0, -10), 34, 42);		
+				set_state(StateType.JUMP, new ArrayList(){StateType.JUMPSTART}, StateType.JUMP);	
 			}
 			else if (dashing)
 			{
-				preAnimations = new ArrayList(){StateType.DASHSTART};
-				tempAnimation = StateType.DASH;
-				// Update the hurtbox
 				hurtbox.resetDimensions();
-				set_state(StateType.DASH);
-				dash_state();
+				set_state(StateType.DASH, new ArrayList(){StateType.DASHSTART}, StateType.DASH);
 			}
 			else if (move_left || move_right)
 			{
-				tempAnimation = StateType.RUN;
-				// Update the hurtbox
 				hurtbox.resetDimensions();
-				set_state(StateType.RUN);
-				run_state();
+				set_state(StateType.RUN, new ArrayList(){StateType.RUNSTART}, StateType.RUN);
 			}
 			else if (beginInteract)
 			{
-				preAnimations = new ArrayList(){StateType.CROUCHEND};
-				tempAnimation = StateType.IDLE;
-				// Update the hurtbox
 				hurtbox.resetDimensions();
-				set_state(StateType.INTERACT);
-				interact_state();
+				set_state(StateType.INTERACT, new ArrayList(){StateType.CROUCHEND}, StateType.IDLE);
 			}
 		}
 
@@ -695,12 +533,8 @@ namespace Alakoz.GameObjects
 				applyFall = true;
 				dashCooldown = 15;
 				
-				// Update the Animations
-				preAnimations = new ArrayList(){StateType.DASHEND};
-				tempAnimation = StateType.FALL;
-
-				set_state(StateType.AIR);
-				air_state();
+				// hurtbox.changeDimensions(new Vector2(0, -10), 34, 42);
+				set_state(StateType.AIR, new ArrayList(){StateType.DASHEND}, StateType.FALL);
 				return;
 			}
 			else if (jumping)
@@ -709,29 +543,31 @@ namespace Alakoz.GameObjects
 				dashing = false;
 				applyFall = true;
 				dashCooldown = 15;
-				tempAnimation = StateType.JUMP;
-				set_state(StateType.JUMP);
-				jump_state();
+				grounded = false;
+				
+				hurtbox.changeDimensions(new Vector2(0, -10), 34, 42);
+				set_state(StateType.JUMP, new ArrayList(){StateType.JUMPSTART}, StateType.JUMP);
 			}
 			else if (wallCollide && wallBuffer == 0) 
 			{ 
 				dashing = false;
 				applyFall = true;
 				dashCooldown = 15;
-				tempAnimation = StateType.WALLCLING;
-				set_state(StateType.WALLCLING);
-				wallCling_state();
+
+				set_state(StateType.WALLCLING, new ArrayList(){}, StateType.WALLCLING);
 			}
 			else if (attacking)
 			{
-				set_state(StateType.ATTACK);
-				attack_state();
+				dashing = false;
+				applyFall = true;
+				attackCounter++;
+				
+				set_state(StateType.BASICATTACK4, new ArrayList(){StateType.BASICATTACK4}, StateType.BASICATTACK4);
 			}
 			else
 			{
 				dash();	
 			}
-
 		}
 		
 		public void wallCling_state()
@@ -746,11 +582,7 @@ namespace Alakoz.GameObjects
 				
 				spriteCoordinate = new Vector2(-39, -36);
 
-				preAnimations = new ArrayList(){StateType.CROUCHEND};
-				tempAnimation = StateType.IDLE;
-
-				set_state(StateType.IDLE);
-				idle_state();
+				set_state(StateType.IDLE, new ArrayList(){StateType.CROUCHEND}, StateType.IDLE);
 			}
 			else if (dashing)
 			{
@@ -761,12 +593,9 @@ namespace Alakoz.GameObjects
 				wallCooldown -= 5;
 				spriteCoordinate = new Vector2(-39, -36);
 				
-				preAnimations = new ArrayList(){StateType.DASHSTART}; 
-				tempAnimation = StateType.DASH;
-				set_state(StateType.DASH);
-				dash_state();
+				set_state(StateType.DASH, new ArrayList(){StateType.DASHSTART}, StateType.DASH);
 			}
-			else if (!wallCollide || wallCooldown <= 0 || (direction == 0 && move_right) || (direction == 1 && move_left))
+			else if (!wallCollide || wallCooldown <= 0 || (direction == -1 && move_right) || (direction == 1 && move_left))
 			{
 				fallSpeed = 1f;
 				wallBuffer = 7;
@@ -775,19 +604,18 @@ namespace Alakoz.GameObjects
 				wallCollide = false;
 
 				// hurtbox.changeDimensions(nwwew Vector2(0, -10), 34, 42);
-				tempAnimation = StateType.FALL;
-				set_state(StateType.AIR);
-				air_state();
+				set_state(StateType.AIR, new ArrayList(){}, StateType.FALL);
 			} 
 			else 
 			{
-				if (direction == 0) spriteCoordinate = new Vector2(-48, -36);
+
+				if (direction == -1) spriteCoordinate = new Vector2(-48, -36);
 				else spriteCoordinate = new Vector2(-30, -36);
 				// fallSpeed = wallFallSpeed;
 				if (softJumping)
 				{
 					wallCollide = false;
-					set_state(StateType.WALLJUMP);
+					set_state(StateType.WALLJUMP, new ArrayList(){}, StateType.WALLCLING);
 					wallJump_state();
 				}
 				else 
@@ -797,7 +625,7 @@ namespace Alakoz.GameObjects
 				}	
 			}
 		}
-
+		
 		public void wallJump_state()
 		{
 			move_left = false;
@@ -814,11 +642,7 @@ namespace Alakoz.GameObjects
 				
 				spriteCoordinate = new Vector2(-39, -36);
 
-				preAnimations = new ArrayList(){StateType.CROUCHEND};
-				tempAnimation = StateType.IDLE;
-
-				set_state(StateType.IDLE);
-				idle_state();
+				set_state(StateType.IDLE, new ArrayList(){StateType.CROUCHEND}, StateType.IDLE);
 			}
 			// State Restrictions
 			else if (stateFrame == 0)
@@ -837,33 +661,30 @@ namespace Alakoz.GameObjects
 				preAnimations = new ArrayList(){StateType.WALLJUMP};
 				tempAnimation = StateType.FALL;
 
-				walljump(); // Perform the jump			
+				walljump(); // Perform the jump		
 			} 
 			else if (stateFrame < 15)
 			{
 				if (wallCollide) 
 				{ 
-					if (direction == 0) direction = 1;
-					else direction = 0;
+					if (direction == -1) direction = 1;
+					else direction = -1;
 
 					wallJumping = false;
 					wallBuffer = 0;
+
 					hurtbox.resetDimensions();
-					preAnimations = new ArrayList(){};
-					tempAnimation = StateType.WALLCLING;
-					set_state(StateType.WALLCLING);
-					wallCling_state();
+					set_state(StateType.WALLCLING, new ArrayList(){}, StateType.WALLCLING);
 				}
 			}
 			else 
 			{
 				spriteCoordinate = new Vector2(-39, -36);
-				tempAnimation = StateType.FALL;
-				set_state(StateType.AIR);
-				air_state();
+				set_state(StateType.AIR, new ArrayList(){}, StateType.FALL);
+
 			}
 		}
-
+		
 		public void hit_state()
 		{
 			grounded = false;
@@ -871,13 +692,12 @@ namespace Alakoz.GameObjects
 			{
 				hit = false;
 				hitstun = 0;
-				tempAnimation = StateType.FALL;
-				set_state(StateType.AIR);
-				air_state();
+				set_state(StateType.AIR, new ArrayList(){}, StateType.FALL);
 				return;
 			}
 			else
 			{
+				
 				move_left = false;
 				move_right = false;
 				jumping = false;
@@ -889,6 +709,9 @@ namespace Alakoz.GameObjects
 				if (applyKB) 
 				{
 					stateFrame = 0; // So that the frames dont accumulate when hit multiple times during hitstun
+					
+					foreach (Hitbox hitbox in allHitboxes)	hitbox.active=false; // Deactive all hitboxes
+
 					if (currentAnimation == StateType.HIT)  // To make sure the impact frames play when hit again DURING hitstun
 					{
 						preAnimations = new ArrayList(){StateType.HITSTART};
@@ -899,25 +722,9 @@ namespace Alakoz.GameObjects
 			}
 		}
 
-		public void attack_state()
-		{
-			move_left = false;
-			move_right = false;
-			jumping = false;
-			crouching = false;
-			dashing = false;
-			
-			set_attack();
-		}
-
 		public void interact_state()
 		{
-			if (!beginInteract) 
-			{
-				tempAnimation = StateType.IDLE;
-				set_state(StateType.IDLE);
-				idle_state();
-			}
+			if (!beginInteract) set_state(StateType.IDLE, new ArrayList(){}, StateType.IDLE);
 			else interactFunction.Invoke(this, new EventArgs());			
 		}
 		
@@ -927,48 +734,103 @@ namespace Alakoz.GameObjects
 		public void set_positions()
 		{
 			currPosition = position;
-			nextPosition.X = position.X + velocity.X;
-            nextPosition.Y = position.Y + velocity.Y;
-		}
+			float tempVelocityX;
+			float tempVelocityY;
 
-		// For dealing with attacks. Adds any hitboxes to the lists of collisions and sets any necessary
-		// physics values
-		public void set_attack()
-		{
-			// need to make sure grounded is set to false AFTER this function is called
-			switch (previousState)
-			{
-				case StateType.AIR:
-					airAttack();
-					break;
-				case StateType.JUMP:
-					airAttack();
-					break;
-				case StateType.IDLE:
-					groundAttack();
-					break;
-				case StateType.RUN:
-					groundAttack();
-					break;
-				case StateType.DASH:
-					dashAttack();
-					break;
-				case StateType.CROUCH:
-					crouchAttack();
-					break;
-			}
+			if (direction == -1) tempVelocityX = velocity.X - (speed * acceleration);
+			else tempVelocityX = velocity.X + (speed * acceleration);
+
+			tempVelocityY = velocity.Y + (fallSpeed * gravity);
+			
+			nextPosition.X = position.X + tempVelocityX;
+            nextPosition.Y = position.Y + tempVelocityY;
 		}
 
 		/// Changes the players current state, setting it to <param name="newState"> while recording the previous state.
 		/// Also resets the stateFrame count.
-        public void set_state(StateType newState)
+        public void set_state(StateType newState, ArrayList newPreanimations, StateType newTempanimation)
         {
-			if (currentState != newState)
-			{
-				previousState = currentState; 
-				stateFrame = 0;
-			}
+			if (currentState == newState) return;
+
+            previousState = currentState;
             currentState = newState;
+            stateFrame = 0;
+
+            preAnimations = newPreanimations;
+            tempAnimation = newTempanimation;
+
+            find_state(newState); // Call the corresponding state function
+        }
+
+		// Finds the state <newState> and calls the function that corresponds to it
+		private void find_state(StateType newState)
+        {
+            switch (newState)
+            {
+                case StateType.AIR:
+                    air_state();
+                    break;
+                case StateType.IDLE:
+                    idle_state();
+                    break;
+                case StateType.JUMP:
+                    jump_state();
+                    break;
+                case StateType.RUN:
+                    run_state();
+                    break;
+                case StateType.CROUCH:
+                    crouch_state();
+                    break;
+				case StateType.DASH:
+                    dash_state();
+                    break;
+                case StateType.WALLCLING:
+                    wallCling_state();
+                    break;
+                case StateType.WALLJUMP:
+                    wallJump_state();
+                    break;
+				case StateType.BASICATTACK1:
+                    PlayerAttacks.bAttack1_State(this);
+                    break;
+				case StateType.BASICATTACK2:
+                    PlayerAttacks.bAttack2_State(this);
+                    break;
+				case StateType.BASICATTACK3:
+                    PlayerAttacks.bAttack3_State(this);
+                    break;
+				case StateType.BASICATTACK4:
+                    PlayerAttacks.bAttack4_State(this);
+                    break;
+				case StateType.AIRATTACK1:
+                    PlayerAttacks.airAttack1_State(this);
+                    break;
+				case StateType.AIRATTACK2:
+                    PlayerAttacks.airAttack2_State(this);
+                    break;
+				case StateType.AIRATTACK3:
+                    PlayerAttacks.airAttack3_State(this);
+                    break;
+				case StateType.UPFINISHER:
+                    PlayerAttacks.upFinisher_State(this);
+                    break;
+				case StateType.DOWNFINISHER:
+                    PlayerAttacks.downFinisher_State(this);
+                    break;
+				case StateType.FRONTFINISHER:
+                    PlayerAttacks.frontFinisher_State(this);
+                    break;
+				case StateType.BACKFINISHER:
+                    PlayerAttacks.backFinisher_State(this);
+                    break;
+				case StateType.HIT:
+					hit_state();
+					break;
+                case StateType.INTERACT:
+                    interact_state();
+                    break;
+            }
         }
 		
 		/// Play a set of non looping animations. This functions keeps the base looping animations the same
@@ -1009,9 +871,9 @@ namespace Alakoz.GameObjects
 		// without calling the analogous state method
 		public override void update_input()
 		{
-			speed = airSpeed;
-			acceleration = airAccel;
-			deceleration = airDecel; 
+			// Vertical Movement
+			if (controls.isDown(controls.Up)) move_up = true;
+			else move_up = false; 
 
 			// Horizontal movement
 			if (controls.isDown(controls.Right) && controls.isDown(controls.Left)) // dont move when both are pressed
@@ -1050,6 +912,7 @@ namespace Alakoz.GameObjects
 
 			// Attack
 			if (controls.isDown(controls.Attack)) attacking = true;
+			else attacking = false;
 
 			// Map Interactions
 			if (controls.isDown(controls.Interact) && interactCooldown == 0) interacting = true;
@@ -1061,51 +924,15 @@ namespace Alakoz.GameObjects
 		public override void update_state()
 		{
 			if (hit) 
-			{	
-				preAnimations = new ArrayList(){StateType.HITSTART};
-				tempAnimation = StateType.HIT;
-				set_state(StateType.HIT);
-				hit_state();			
-			}
-
-			if (hitStop > 0 ) return;
-			
-			switch (currentState)
 			{
-				case StateType.AIR:
-					air_state();
-					break;
-				case StateType.IDLE:
-					idle_state();
-					break;
-				case StateType.JUMP:
-					jump_state();
-					break;
-				case StateType.CROUCH:
-					crouch_state();
-					break;
-				case StateType.RUN:
-					run_state();
-					break;
-				case StateType.DASH:
-					dash_state();
-					break;
-				case StateType.WALLCLING:
-					wallCling_state();
-					break;
-				case StateType.WALLJUMP:
-					wallJump_state();
-					break;
-				case StateType.ATTACK:
-					attack_state();
-					break;
-				case StateType.INTERACT:
-					interact_state();
-					break;
+				set_state(StateType.HIT, preAnimations = new ArrayList(){StateType.HITSTART}, tempAnimation = StateType.HIT);
 			}
+			if (hitStop > 0 ) return;
+
+			find_state(currentState);
+			
 			grounded = false;
 			wallCollide = false;
-
 			fall();
 			decelerate();
 			set_positions(); // Update the "position to be drawn" of the player
@@ -1120,7 +947,7 @@ namespace Alakoz.GameObjects
 			if (hitStop > 0) return;
 
             // Flipping
-            if (direction == 0) flip = SpriteEffects.FlipHorizontally;
+            if (direction == -1) flip = SpriteEffects.FlipHorizontally;
             else if (direction == 1) flip = SpriteEffects.None;
 
 			if (grounded) 
@@ -1128,7 +955,6 @@ namespace Alakoz.GameObjects
 				numJumps = 1;
 				velocity.Y = 0f;
 			}
-			if (acceleration < 0) acceleration = 0;
 
 			position.Y += velocity.Y ;
             position.X += velocity.X ;
@@ -1137,9 +963,9 @@ namespace Alakoz.GameObjects
 			{
 				position = spawnPoint;
 				velocity.Y = 0f; 
-				acceleration = 0f;
 				health = 100;
 			}
+			origin = position + originOffset;
 			hurtbox.update_Position(position);
         }
 
@@ -1236,7 +1062,7 @@ namespace Alakoz.GameObjects
 			+ "\nWall = " + wallCollide
 			+ "\nIgnore Size: " + hitbox.ignoreObjects.Count;
 
-			 spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(hurtboxWidth+ 20, -100) + position, Color.GreenYellow, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
+			spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(hurtboxWidth+ 20, -100) + position, Color.GreenYellow, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
             spriteBatch.DrawString(stateFONT, stateMSG, new Vector2(-39, -120) + position, Color.Gold, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
 			spriteBatch.DrawString(stateFONT, inputMSG, new Vector2(-39, hurtboxHeight) + position, Color.Blue, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
 			// spriteBatch.DrawString(stateFONT,animateMSG, new Vector2(hurtboxWidth + 20, hurtboxHeight) + position, Color.OrangeRed, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);		
@@ -1252,8 +1078,13 @@ namespace Alakoz.GameObjects
 			// Draw player animation
 			animManager.Draw(gameTime, spriteBatch, position + spriteCoordinate, Vector2.One, flip); 
 			
-			// Draw the players hurtbox, will change later
 			// hurtbox.Draw(spriteBatch,flip);
+
+			// foreach (Hitbox hitbox in allHitboxes) 
+			// {
+			// 	if (hitbox.active) hitbox.Draw(spriteBatch, SpriteEffects.None);
+			// }
+			// spriteBatch.DrawRectangle(new RectangleF(position.X, position.Y, 5f, 5f), Color.DarkSeaGreen, 2);
 			
 			// Draw debug messages
 			// drawDebug(gameTime, spriteBatch);	

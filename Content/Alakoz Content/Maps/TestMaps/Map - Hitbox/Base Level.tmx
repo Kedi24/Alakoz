@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.1" orientation="orthogonal" renderorder="right-down" width="32" height="23" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="23">
+<map version="1.10" tiledversion="1.10.1" orientation="orthogonal" renderorder="right-down" width="32" height="23" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="23">
  <tileset firstgid="1" source="Base Tileset.tsx"/>
- <objectgroup id="3" name="Dynamic Collisions">
+ <objectgroup id="3" name="Species Collisions">
   <object id="21" x="448" y="480" width="32" height="32">
    <properties>
     <property name="aTYPE" value="ENEMYSPAWN"/>
@@ -17,6 +17,7 @@
    </properties>
   </object>
  </objectgroup>
+ <objectgroup id="4" name="Dynamic Collisions"/>
  <objectgroup id="2" name="Static Collisions">
   <object id="1" x="128" y="544" width="736" height="96">
    <properties>

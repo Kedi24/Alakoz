@@ -32,20 +32,26 @@ namespace Alakoz.Collision
 
         public CollisionShape bounds {get; set;}
         
-        public Vector2 knockback {get; set;}
+        public Vector2 knockback;
         public int damage {get; set;}
-        public float damageMult = 1;
         public int activeFrames = 0;
         public int hitstun {get; set;}
+        public int hitstop;
 
         public List<CollisionObject> collidingObjects;  // To prevent the hitbox from colliding with the same object numerous times in a single frame
         public List<CollisionObject> ignoreObjects; // To prevent the hitbox from ever colliding with certain objects 
 
-        public Animation sprite;
-
+        public AnimationManager animManager;
         public bool hitboxVisual = false;
+
+        // -------------- CONSTANTS
+        public static readonly Hitbox Zero = new Hitbox(Vector2.Zero, 0f, 0f, 0, Vector2.Zero, 0, 0);
+        public const int LIGHT = 3;
+        public const int MEDIUM = 7;
+        public const int HEAVY = 12;
+        public const int KILL = 16;
     
-        public Hitbox(Vector2 newPosition, float newWidth, float newHeight, int newActiveFrames, Vector2 newKB, int newDamage, int newHitstun, GameObject newOwner = null){
+        public Hitbox(Vector2 newPosition, float newWidth, float newHeight, int newActiveFrames, Vector2 newKB, int newDamage, int newHitstun, int newHitstop = LIGHT, GameObject newOwner = null){
             owner = newOwner;
             
             type = CollisionType.HITBOX;
@@ -76,44 +82,46 @@ namespace Alakoz.Collision
         // ========================================================== GENERAL ==========================================================
         public bool isColliding(CollisionObject currObject) { return collidingObjects.Contains(currObject);}
         public bool isIgnore(CollisionObject currObject) { return ignoreObjects.Contains(currObject);}
+        
+        public void addCollision(CollisionObject currObject) { collidingObjects.Add(currObject);}
+        public void addIgnore(CollisionObject toIgnore) { ignoreObjects.Add(toIgnore);}
 
-        public void append(CollisionObject currObject) { collidingObjects.Add(currObject); }
-        public void addIgnore(CollisionObject toIgnore) { ignoreObjects.Add(toIgnore); }
-
-        public void remove(CollisionObject currObject) { collidingObjects.Remove(currObject); }
+        public void removeCollision(CollisionObject currObject) { collidingObjects.Remove(currObject); }
         public void removeIgnore(CollisionObject toIgnore) { ignoreObjects.Remove(toIgnore); }
 
         public void update_Position(Vector2 updatedPosition) { position = updatedPosition; }
         public void setHitstop(int amount){ if (owner == null) return; owner.hitStop = amount;}
-        
-
+        public void setVelocityY(float amount) { if (owner == null) return; owner.velocity.Y = 0;}
+        public void setParameters(float newX, float newY, float newWidth, float newHeight, int newActiveFrames, float newKBX, float newKBY, int newDamage, int newHitstun, int newHitstop = LIGHT)
+        {
+            position.X = newX;
+            position.Y = newY;
+            width = newWidth;
+            height = newHeight;
+            activeFrames = newActiveFrames;
+            knockback.X = newKBX;
+            knockback.Y = newKBY;
+            damage = newDamage;
+            hitstun = newHitstun;
+            hitstop = newHitstop;
+        }
 
         // ========================================================== UPDATING & DRAWING ==========================================================
 
         public void Draw(SpriteBatch spriteBatch, SpriteEffects spriteEffects)
         {
-            if (!active) return;
-            spriteBatch.Draw(
-				sprite.Sprite,
-				position,
-                new Rectangle(0 * sprite.frameWidth,
-					0,
-					sprite.frameWidth,
-					sprite.frameHeight),
-				Color.White,
-				0f,
-				Vector2.Zero,
-				scale,
-				spriteEffects,
-				0f) ;
+            base.Draw(spriteBatch, SpriteEffects.None, Color.White, position, width, height);
         }
 
         public override void OnCollision(CollisionObject currObject)
         {
-            // Use the switch statement to add any collisions unique to the hitbox. Otherwise, just call the base function
+             // Use the switch statement to add any collisions unique to the hitbox. Otherwise, just call the base function
             // to prevent redundant code
-            switch (currObject)
+            switch (currObject.type)
             {
+                case CollisionType.ENEMYHURTBOX:
+                    enemyHurtboxCollision( (enemyHurtbox) currObject);
+                    break;
                 default:
                     base.OnCollision(currObject);
                     break;
@@ -139,6 +147,21 @@ namespace Alakoz.Collision
         // --------------------------------------------------------- Platform
         public override void platformCollision(Platform currObject)
         {
+        }
+
+        public void enemyHurtboxCollision(enemyHurtbox currObject) {
+
+            if (owner == null || owner.type != GameObjectType.PLAYER) return;
+            bool intersecting = getBounds().isIntersecting(currObject.getBounds());
+
+            if (intersecting && currObject.active)
+            {
+                // Handle the collision
+                if (!isColliding(currObject) && !isIgnore(currObject)) // To prevent hitting multiple times
+                {
+                    owner.applyAttackBounce = true;
+                }
+            }
         }
     }
 }

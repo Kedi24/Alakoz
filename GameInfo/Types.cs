@@ -5,7 +5,16 @@
 
 namespace Alakoz.GameInfo
 {
-    // ========================================== STATE ==========================================
+    // ========================================== GAME OBJECT TYPES ==========================================
+    public enum GameObjectType
+    {
+        NONE,
+        PLAYER,
+        ENEMY,
+        DOOR,
+        BASICDOOR,
+    }
+    // ========================================== STATE TYPES ==========================================
     // Enumerators for the different states / animations. Used to compare and reference different states.
     public enum StateType
     {
@@ -32,12 +41,28 @@ namespace Alakoz.GameInfo
         DASH,
         DASHSTART,
         DASHEND,
+        // ----- Attacks
         ATTACK,
+        BASICATTACK1,
+        BASICATTACK2,
+        BASICATTACK3,
+        BASICATTACK4,
+        AIRATTACK1,
+        AIRATTACK2,
+        AIRATTACK3,
+        UPFINISHER,
+        DOWNFINISHER,
+        FRONTFINISHER,
+        BACKFINISHER,
+        DOORENTER,
+        
+        // Misc
+        TOGROUND,
+        TOAIR,
         SKILL,
         HIT,
         HITSTART,
 
-        DOORENTER,
         SYMBOL, // Placeholder for unimplemented animations
         HURTBOX, // Just for convenience, will delete later
         HITBOX, // Just for convenience, will delete later
@@ -57,7 +82,7 @@ namespace Alakoz.GameInfo
         UNLOCK,
     }
 
-    // ========================================== COLLISION ==========================================
+    // ========================================== COLLISION TYPES ==========================================
     // Enumerators for static and dynamic collision objects
     public enum CollisionType
     {

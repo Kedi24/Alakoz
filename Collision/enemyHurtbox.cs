@@ -22,7 +22,6 @@ namespace Alakoz.Collision
     public class enemyHurtbox : CollisionObject{
         public Vector2 origin;
         public Vector2 scale {get; set;}
-        public Animation sprite;
         public AnimationManager spriteManager;
         public Enemy owner; // The entity that owns this hurtbox
 
@@ -46,8 +45,6 @@ namespace Alakoz.Collision
             type = CollisionType.ENEMYHURTBOX;
             owner = newOwner;
             currBounds = new CollisionShape(left, top, width, height);
-
-            sprite = CollisionSprites[CollisionType.HURTBOX];
         }
         public enemyHurtbox(Enemy newOwner, Vector2 newPosition, float newWidth, float newHeight, bool visual) :this(newOwner, newPosition, newWidth, newHeight)
         { 
@@ -66,19 +63,7 @@ namespace Alakoz.Collision
 
         public void Draw(SpriteBatch spriteBatch, SpriteEffects spriteEffects)
         {
-            spriteBatch.Draw(
-				sprite.Sprite,
-				position,
-                new Rectangle(0 * sprite.frameWidth,
-					0,
-					sprite.frameWidth,
-					sprite.frameHeight),
-				Color.White,
-				0f,
-				Vector2.Zero,
-				scale,
-				spriteEffects,
-				0f) ;
+            base.Draw(spriteBatch, SpriteEffects.None, Color.White, position, width, height);
         }
 
         // ========================================================== COLLISION CODE ==========================================================
@@ -93,8 +78,6 @@ namespace Alakoz.Collision
         {   
             bool intersecting = getBounds().isIntersecting(currObject.getBounds());
 
-            float heightOffset = currObject.top - height;
-
             if (intersecting && currObject.active)
             {
                 // Handle the collision
@@ -105,16 +88,27 @@ namespace Alakoz.Collision
                     owner.KB = currObject.knockback;
                     owner.applyKB = true;
                     owner.hitstun = currObject.hitstun;
-                    // Console.WriteLine(currObject.hitstun);
-                    // Console.WriteLine(currObject.knockback);
+                    owner.applyFall = true;
+                    currObject.owner.applyAttackBounce = true;
 
-                    currObject.append(this);
+                    if (owner.health <= 0)
+                    {
+                        owner.hitStop = Hitbox.KILL;
+                        currObject.setHitstop(Hitbox.KILL);
+                    } 
+                    else 
+                    {
+                        owner.hitStop = currObject.hitstop;
+                        currObject.setHitstop(currObject.hitstop);
+                    }
+                    
+                    currObject.addCollision(this);
                 }
             }
             
-            if (owner.hitstun == 0 && currObject.isColliding(this))
+            if ((owner.hitstun == 0 || !currObject.active) && currObject.isColliding(this))
             {
-                    currObject.remove(this);
+                    currObject.removeCollision(this);
             }
         }
         
@@ -137,35 +131,35 @@ namespace Alakoz.Collision
             if (leftintersection) 
             {
 
-                if ( owner.position.Y > heightOffset) // For intersectionsThis means that the player is approaching form below
+                if ( owner.position.Y > heightOffset && owner.position.Y < currObject.bottom) // This checks if the player is approaching from above/below, if so, prioritize vertical intersections
                 {
                     owner.position.X =  currObject.left - width;
-                    owner.acceleration = 0;
+                    owner.velocity.X = 0;
                 }
                 
             } else if (rightintersection)
             {
                 // Offset the player horizontally
-                if ( owner.position.Y >  heightOffset) // This means that the player is approaching from above
+                if ( owner.currPosition.Y > heightOffset && owner.currPosition.Y < currObject.bottom) // This check if the player is approaching from above/below, if so, prioritize vertical intersections
                 {
                     owner.position.X =  currObject.right;
-                    owner.acceleration = 0;
-                }
+                    owner.velocity.X = 0;
+                };
             };
             
             // --------------- Vertical Intersections
             if ( topintersection ) 
             {   
-                if (owner.position.Y <=  heightOffset) // player approaches from above
+                if (owner.position.X > currObject.left - width && owner.position.X < currObject.right) // player approaches from above
                 { 
-                    // Offset the player vertically
-                    owner.numJumps = 1;
+                    // Reset ground values
 				    owner.grounded = true;
                     
-                    // Modify the acccleration based on whether or not its grounded
-				    owner.acceleration = owner.groundAccel;
-				    owner.speed = owner.groundSpeed;
+                    // // Modify the acccleration based on whether or not its grounded
+				    // owner.acceleration = owner.groundAccel;
+				    // owner.speed = owner.groundSpeed;
 				    
+                    // Offset the player vertically
                     owner.jumping = false;
                     owner.velocity.Y = 0;
                     owner.position.Y =  currObject.top - height;
@@ -173,8 +167,9 @@ namespace Alakoz.Collision
                 // ############################################################# NEED TO FIX BOTTOM COLLISION 
             } else if ( bottomintersection )  // Player intersects the bottom of the currObject
             {
-                if (owner.position.Y > currObject.bottom)
+                if (owner.position.X > currObject.left - width && owner.position.X < currObject.right)
                 {
+                    owner.velocity.Y = 0;
                     owner.position.Y = currObject.bottom;
                 }
             };
@@ -196,13 +191,12 @@ namespace Alakoz.Collision
             {
                 if (owner.position.Y <=  heightOffset)// player approaches from above
                 { 
-
                     // Offset the player vertically
                     owner.numJumps = 1;
 				    owner.grounded = true;
 				    owner.jumping = false;
                     owner.velocity.Y = 0;
-                    owner.position.Y =  currObject.top - height;
+                    owner.position.Y = currObject.top - owner.hurtboxHeight;
                 }
             }
         }

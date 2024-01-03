@@ -16,7 +16,7 @@ namespace Alakoz.GameObjects
 {
 	public class Enemy : GameObject
 	{
-        		// ------ OTHER ------ //
+    	// ------ OTHER ------ //
 		public string stateMSG = "";
 		public SpriteFont stateFONT { get; set; }
 
@@ -26,60 +26,63 @@ namespace Alakoz.GameObjects
 		public string movementMSG = "";
         public SpriteEffects flip;
 
-        // ------ MOVEMENT ------- //
+        // ------ Physics
         public Vector2 startPosition;
         public new Vector2 velocity;
         public float distance;
         public float distanceTraveled;
 		public Vector2 currPosition;
 		public Vector2 nextPosition;
-		// Override for enemies, friendlies and player// 
-		public float gravity = 0.4f;  
-		public float speed;
-		public float airSpeed = 1f;
+		
+		public bool applyFall = true;
+		public float gravity = 0.3f;
+		public float speed = 1f; // So that they move slower than the player
 		public float fallSpeed = 1f;
-		public float groundSpeed = 1f;
-		// Keep values below for now - change later if needed
-		public float velocityMax = 3f;
-		public float terminalVelocity = 10f;
-		public float accelMax = 10f;
-		public float accelMin = 0.1f;
-		public float acceleration = 0.2f; // Default acceleration
-		public float deceleration = 0.2f; // Default deceleration
-		public float airAccel = 0.2f;
-		public float airDecel = 0.2f;
-		public float groundAccel = 0.3f;
-		public float groundDecel = 0.1f;
 
+		public float velocityMax = 3f;
+		public float terminalVelocity = 8f;
+		public float acceleration = 0.2f; // Default acceleration
+		public float deceleration = 0.1f; // Default deceleration
+		
+		// ------ Moving
 		public int direction = 1;
-		public int numJumps = 1;
-		public bool switchero = false;
 		public bool move_left = false;
 		public bool move_right = false;
+		// public bool move_up = false;
+		// public bool move_down = false;
+		public bool grounded = false;
+		public bool switchero = false;
+
+		// ---- Jumping
 		public bool jumping = false;
-		public bool dashing = false;
-		public bool attacking = false;
+		public int numJumps = 1;
+		
+		// ---- Crouching
 		public bool crouching = false;
 
-		public bool grounded = false;
-		public bool hit = false;
+		// ---- Dashing
+		// public bool dashing = false;
+		// public int numDashes = 1;
+		// public int dashCooldown = 15;
+		// public float dashSpeed = 6f;
 
-		public int numDashes;
-		public int dashCooldown;
-		public int hitstun;
-		public int health = 20;
+		// ---- Attacking
+		public bool attacking = false;
+		public int attackCounter = 0;
+
+		// ---- Hit 
+		public bool hit = false;
+		public int hitstun = 0;
+		public int health = 100;
 		
 		
 		// ------ COLLISION ------- //
 		public enemyHurtbox hurtbox {get; set;}
-		public Hitbox hitbox {get; set;}
-		public Vector2 hitboxPosition = new Vector2(32f, 15f); // For the players attack, will change later
 		public Vector2 KB; // The knockback from the hitbox that interescts the player
-		public bool applyKB = false;
-		float hurtboxWidth = 34;
-		float hurtboxHeight = 45;
-		public bool hurtboxVisual = true;
+		public float hurtboxWidth = 34;
+		public float hurtboxHeight = 45;
 		Vector2 spriteCoordinate = new Vector2(-39, -36); // Placement of sprite in relation to the hurtbox. Calculated with aesprite
+		public Hitbox[] allHitboxes = new Hitbox[5]; // Array to store a preset number of hitboxes 
 
 		// ------ ANIMATION ------ //
 		public Dictionary<StateType, Animation> animations;
@@ -95,8 +98,14 @@ namespace Alakoz.GameObjects
 
 		public Enemy(Dictionary<StateType, Animation> newSprites ,Vector2 newPosition)
 		{
+			type = GameObjectType.ENEMY;
+
             position = newPosition;
             startPosition = newPosition;
+			originOffset.X = (hurtboxWidth/2);
+			originOffset.Y = (hurtboxHeight/2);
+			origin = position + originOffset;
+
             speed = 2f;
 			distance = 0f;
             distanceTraveled = 100f;
@@ -113,10 +122,21 @@ namespace Alakoz.GameObjects
 			preAnimations = new ArrayList();
 
 			hurtbox = new enemyHurtbox(this, position, hurtboxWidth, hurtboxHeight, true);
-			hitbox = new Hitbox(position, hurtboxWidth, hurtboxHeight, 0, new Vector2(0,-10), 10, 20, this);
-			hitbox.addIgnore(hurtbox);
+
+			// Allocating space for the hitboxes
+			for (int i = 0; i < 5; i++) 
+			{
+				allHitboxes[i] = new Hitbox(Vector2.Zero, 0f, 0f, 0, Vector2.Zero, 0, 0);
+				allHitboxes[i].owner = this;
+				allHitboxes[i].addIgnore(hurtbox); // To prevent dealing damage to yourself
+				allHitboxes[i].active = false;
+				activeCollisions.Add(allHitboxes[i]);
+			}
+
+			allHitboxes[0].setParameters(origin.X - 10, origin.Y - 10, hurtboxWidth - 10, hurtboxHeight - 10, 0, direction*velocity.X, -4, 10, 15, Hitbox.LIGHT);
+			allHitboxes[0].active = true;
+	
 			activeCollisions.Add(hurtbox);
-			activeCollisions.Add(hitbox);
 
             flip = SpriteEffects.None;
         }
@@ -126,7 +146,7 @@ namespace Alakoz.GameObjects
 		// on player input and state
 		private void move()
         {
-            if (direction == 0) 
+            if (direction == -1) 
 			{
                 velocity.X = approach(velocity.X, -velocityMax, speed * acceleration); 
 				distance -= velocity.X;
@@ -139,8 +159,8 @@ namespace Alakoz.GameObjects
 		}
 		private void switchDirection()
 		{
-			if (direction == 0) direction = 1;
-			else direction = 0;
+			if (direction == -1) direction = 1;
+			else direction = -1;
 			distance = 0;
 			switchero = false;
 		}
@@ -150,8 +170,14 @@ namespace Alakoz.GameObjects
 		}
 		private void fall()
 		{
-            if (velocity.Y < terminalVelocity) velocity.Y += fallSpeed * gravity;
-            else velocity.Y = terminalVelocity;
+            if (!applyFall)
+			{
+				velocity.Y = 0; 
+				return;
+			}
+
+			if (velocity.Y < terminalVelocity) velocity.Y = approach(velocity.Y, terminalVelocity, gravity);
+			else velocity.Y = terminalVelocity;
 		}
 		private void decelerate()
 		{
@@ -194,6 +220,7 @@ namespace Alakoz.GameObjects
 			}
 			else 
 			{
+				allHitboxes[0].active = true; // reactivate the hitbox
 				tempAnimation = StateType.RUN;
 				set_state(StateType.RUN);
 				run_state();
@@ -220,9 +247,10 @@ namespace Alakoz.GameObjects
 		
 		public void hit_state()
 		{
-            if (hitstun == 0) 
+            if (stateFrame == hitstun) 
 			{
 				hit = false;
+				hitstun = 0;
 				tempAnimation = StateType.FALL;
 				set_state(StateType.AIR);
 				air_state();
@@ -235,11 +263,16 @@ namespace Alakoz.GameObjects
 				jumping = false;
 				crouching = false;
 
+				nextPosition = currPosition; // To prevent map based collisions that depend on the next position from being invoked (grounded, etc)
+
 				if (applyKB) 
 				{
-					if (tempAnimation == currentAnimation)  // To make sure the impact frames play when hit again DURING hitstun
+					stateFrame = 0; // So that the frames dont accumulate when hit multiple times during hitstun
+					foreach (Hitbox hitbox in allHitboxes)	hitbox.active=false; // Deactive all hitboxes
+
+					if (currentAnimation == StateType.HIT)  // To make sure the impact frames play when hit again DURING hitstun
 					{
-						preAnimations = new ArrayList(){StateType.SYMBOL};
+						preAnimations = new ArrayList(){StateType.HITSTART};
 						set_preAnimations();
 					}
 					knockback();
@@ -252,11 +285,15 @@ namespace Alakoz.GameObjects
 		public void set_positions()
 		{
 			currPosition = position;
+			float tempVelocityX;
+			float tempVelocityY;
 
-			float tempVelocityX = velocity.X + (speed * acceleration);
-			float tempVelocityY = velocity.Y + (speed * gravity);
+			if (direction == -1) tempVelocityX = velocity.X - (speed * acceleration);
+			else tempVelocityX = velocity.X + (speed * acceleration);
 
-            nextPosition.X = position.X + tempVelocityX;
+			tempVelocityY = velocity.Y + (fallSpeed * gravity);
+			
+			nextPosition.X = position.X + tempVelocityX;
             nextPosition.Y = position.Y + tempVelocityY;
 		}
        
@@ -309,7 +346,7 @@ namespace Alakoz.GameObjects
 
 			if (grounded)
 			{
-				if (direction == 0)
+				if (direction == -1)
 				{	
 					move_left = true; 
 					move_right = false;
@@ -329,14 +366,14 @@ namespace Alakoz.GameObjects
         {   
             if (hit) 
 			{	
-				tempAnimation = StateType.SYMBOL;
+				preAnimations = new ArrayList(){StateType.HITSTART};
+				tempAnimation = StateType.HIT;
 				set_state(StateType.HIT);
 				hit_state();			
 			}
 
 			if (hitStop > 0 ) return;
 
-			fall();
 			switch (currentState)
 			{
 				case StateType.AIR:
@@ -350,6 +387,7 @@ namespace Alakoz.GameObjects
 					break;
 			}
 			grounded = false;
+			fall();
 			decelerate();
 			set_positions(); // Update the "position to be drawn" of the player
         }
@@ -360,23 +398,31 @@ namespace Alakoz.GameObjects
 			if (hitStop > 0) return;
 
 			// Flipping
-            if (direction == 0) flip = SpriteEffects.FlipHorizontally;
+            if (direction == -1) flip = SpriteEffects.FlipHorizontally;
             else if (direction == 1) flip = SpriteEffects.None;
+
+			if (grounded) 
+			{
+				numJumps = 1;
+				velocity.Y = 0f;
+			}
 
             position.Y += velocity.Y ;
             position.X += velocity.X ;
 
 			// So that the hurtbox and hitbox follow the enemy
-            hurtbox.update_Position(position); 
-			hitbox.update_Position(position);
+            hurtbox.update_Position(position);
+			
+			// To make the hitbox follow the Enemy
+			origin = position + originOffset;
+			allHitboxes[0].setParameters(origin.X - 9, origin.Y - 11, (hurtboxWidth/2), (hurtboxHeight/2), 0, direction*velocity.X, -7, 10, 15, Hitbox.LIGHT); 
+			
 
             if (position.Y >= 2000f || health <= 0) 
 			{
-				position.Y = startPosition.Y;
-				position.X = startPosition.X; 
+				position = startPosition;
 				velocity.Y = 0f; 
-				acceleration = 0f;
-				health = 20;
+				health = 100;
 			}
 			update_cooldowns();
 
@@ -384,13 +430,6 @@ namespace Alakoz.GameObjects
 
 		public void update_cooldowns()
 		{
-			// -------- Hitstun
-			if (hit && hitstun > 0) hitstun -= 1;
-			else 
-			{
-				hitstun = 0;
-				hit = false;
-			}
 			// -------- Health
 			if (health < 0) health = 0;
 		}
@@ -418,11 +457,11 @@ namespace Alakoz.GameObjects
 			animManager.Draw(gameTime, spritebatch, position + spriteCoordinate, Vector2.One, flip); 
 			
 			// Draw the enemy hurtbox, will change later
-			// hurtbox.Draw(spritebatch, flip);
-			// hitbox.Draw(spritebatch, flip);
+			hurtbox.Draw(spritebatch, flip);
+			foreach (Hitbox hitbox in allHitboxes) if (hitbox.active) hitbox.Draw(spritebatch, flip);
 
 			// Draw debug messages
-			// drawDebug(spritebatch);
+			drawDebug(spritebatch);
 		}
         
         public void drawDebug(SpriteBatch spriteBatch)
@@ -453,11 +492,9 @@ namespace Alakoz.GameObjects
 			+ "\nAttacking = " + attacking
 			+ "\nHit = " + hit;
 
-            spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(800f, 400), Color.DarkRed);
-            spriteBatch.DrawString(stateFONT, stateMSG, new Vector2(5f, 415), Color.Gold);
-			spriteBatch.DrawString(stateFONT, inputMSG, new Vector2(5f, 550), Color.Orange);
-
-			
+            spriteBatch.DrawString(stateFONT, movementMSG, new Vector2(hurtboxWidth+ 20, -100) + position, Color.GreenYellow, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
+            spriteBatch.DrawString(stateFONT, stateMSG, new Vector2(-39, -120) + position, Color.Gold, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
+			spriteBatch.DrawString(stateFONT, inputMSG, new Vector2(-39, hurtboxHeight) + position, Color.Blue, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
         }
     }
 }

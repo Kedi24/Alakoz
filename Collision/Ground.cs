@@ -28,7 +28,6 @@ namespace Alakoz.Collision
         
         public float bottom {get {return position.Y + height;} set{}}
 
-        public Texture2D sprite;
     
         public Ground(Vector2 newPosition, float newWidth, float newHeight)
         {

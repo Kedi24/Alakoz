@@ -15,7 +15,6 @@ namespace Alakoz.Collision
     public class Doorbox : CollisionObject
     {
         public Door owner;
-        public Animation sprite;
         
         // ----- DIMENSIONS ----- //
         public Vector2 sendPosition;
@@ -34,9 +33,6 @@ namespace Alakoz.Collision
 
             sprite = CollisionSprites[CollisionType.HURTBOX];
             scale = new Vector2((newWidth / sprite.frameWidth), (newHeight / sprite.frameHeight));
-            
-            // Just for convenience, the collision bounds will be displayed.
-            displayBound = true;
         }
         // --------------------------------------------------- GENERAL ---------------------------------------------------
         /// <summary>
@@ -54,22 +50,7 @@ namespace Alakoz.Collision
         }
         public void Draw(SpriteBatch spriteBatch, SpriteEffects spriteEffects)
         {
-            if (displayBound)
-            {
-                spriteBatch.Draw(
-				sprite.Sprite,
-				position,
-                new Rectangle(sprite.currentFrame * sprite.frameWidth,
-					0,
-					sprite.frameWidth,
-					sprite.frameHeight),
-				Color.White,
-				0f,
-				Vector2.Zero,
-				scale,
-				spriteEffects,
-				0f) ;
-            }
+            base.Draw(spriteBatch, SpriteEffects.None, Color.White, position, width, height);
         }
 
 
