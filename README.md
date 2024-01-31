@@ -1,4 +1,4 @@
-Alakoz
+Subvert
 ===
 
 ## Table of Contents
@@ -9,12 +9,12 @@ Alakoz
 * [References](#references)
 
 ## Introduction <a name ="introduction"></a>
-Alakoz is a 2D Roguelike Platformer developed using C# and the MonoGame framework. In this game, players will traverse through levels using a unique set of skills and abilities to reach the end goal. Take caution, however, as hordes of enemies and obstacles stand between you and the finish line. Do you have what it takes to reach the end?
+Subvert is a 2D Roguelike Platformer developed using C# and the MonoGame framework. In this game, players will traverse through levels using a unique set of skills and abilities to reach the end goal. Take caution, however, as hordes of enemies and obstacles stand between you and the finish line. Do you have what it takes to reach the end?
 
-As developers, Alakoz is a passion project and our first step into game development. To become familiar with some of the tools used in game development, we have decided to build the game using C#, MonoGame, .NET, and Tiled as they are common within the industry. All in all, we hope to grow in our knowledge of programming and understanding of game development, while also creating an enjoyable experience for audiences.
+As developers, Subvert is a passion project and our first step into game development. To become familiar with some of the tools used in the field, we have decided to build the game using C#, MonoGame, .NET, and Tiled as they are common within the industry. All in all, we hope to grow in our knowledge of programming and understanding of game development, while also creating an enjoyable experience for audiences.
 
-## Gameplay <a name ="gameplay"></a>
-As characterized by the genre, roguelikes traditionally involve “runs” where you must battle through enemies and maneuver around obstacles to reach the goal. Failure to complete these tasks, however, can be fatal as the player's death at any given moment will end the run. With this in mind, you must use the skills and abilities at your disposal to gain the upper hand.
+## Gameplay and Mechanics <a name ="gameplay"></a>
+As characterized by the genre, roguelikes traditionally involve “runs” where you must battle through enemies and maneuver around obstacles to reach the goal. But beware! Failure at any given moment will end the run and you will have to start over from the beginning. With this in mind, you must use the skills and abilities at your disposal to gain the upper hand.
 
 
 #### Controls
@@ -23,7 +23,7 @@ For basic movement, use the `W` `A` `S` `D` keys to jump, move left, move right,
 https://github.com/Kedi24/Alakoz/assets/117780105/cb26cce4-1004-49a3-87f1-6e40b6b16910
 
 #### Wallcling
-In Alakoz, you can cling to the sides of walls. Clinging to a wall will decrease your falling speed, making it easier to get a better view of any obstacles below you or to time a jump. While airborne, simply hold in the direction of the wall that you would like to cling to. You can exit the cling at any time by pressing in the opposite direction.
+In Subvert, you can cling to the sides of walls. Clinging to a wall will decrease your falling speed, making it easier to get a better view of any obstacles below you or to time a jump. While airborne, simply hold in the direction of the wall that you would like to cling to. You can exit the cling at any time by pressing in the opposite direction.
 
 https://github.com/Kedi24/Alakoz/assets/117780105/dbd7a75c-ca20-4ae5-a098-bd2cc4335b82
 
@@ -68,9 +68,16 @@ As well as some general game design features:
 Here is a list of some of the features we plan to tackle in future updates.
 * Complex Enemies
     * Enemies will utilize a path-finding algorithm to chase the player around the map using their own unique abilities.
-* Player Attacks and Skill Tree
+* Player Attacks
     * A set of Basic attacks that can be used at any time.
-    * A set of classes the player can choose from, such as a Ranged class and Melee class. These classes will change the types of moves the character has.
+    * A set of classes the player can choose from, such as a Ranged class and Melee class. These classes will change the types of moves the character has. 
+    * *Here is a small preview of some of the basic attacks the player can perform*:
+  
+      https://github.com/Kedi24/Alakoz/assets/117780105/c07af701-186f-4c7b-9db3-291ff5a22f64
+
+
+    
+* Skill Tree
     * A dense Skill Tree will accommodate the players' choice of class. Each skill will perform its own action distinct from the others. 
 * A Save File system
 
