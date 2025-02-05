@@ -1,24 +1,19 @@
-
-
-
-
-
 namespace Alakoz.GameInfo
 {
     // ========================================== GAME OBJECT TYPES ==========================================
-    public enum GameObjectType
-    {
+    public enum TObject{
+        NULL,
         NONE,
         PLAYER,
         ENEMY,
         DOOR,
         BASICDOOR,
     }
+   
     // ========================================== STATE TYPES ==========================================
     // Enumerators for the different states / animations. Used to compare and reference different states.
-    public enum StateType
-    {
-        // PLAYER STATES
+    public enum TState{
+        NULL,
         NONE,
         IDLE,
         AIR,
@@ -51,7 +46,10 @@ namespace Alakoz.GameInfo
         AIRATTACK2,
         AIRATTACK3,
         UPFINISHER,
+        DOWNFINISHERSTART,
         DOWNFINISHER,
+        DOWNFINISHERGROUND,
+        DOWNFINISHEREND,
         FRONTFINISHER,
         BACKFINISHER,
         DOORENTER,
@@ -84,8 +82,7 @@ namespace Alakoz.GameInfo
 
     // ========================================== COLLISION TYPES ==========================================
     // Enumerators for static and dynamic collision objects
-    public enum CollisionType
-    {
+    public enum TCollision{
         // ------------ STATIC
         HURTBOX,
         HITBOX,
@@ -98,5 +95,18 @@ namespace Alakoz.GameInfo
         ENEMYSPAWN,
         DOOR,
     }
-
+    public enum THitstop{
+        // -------------- CONSTANTS
+        LIGHT = 1,
+        LIGHT2 = 3,
+        MEDIUM = 10,
+        HEAVY = 18,
+        SUPERHEAVY = 24,
+        KILL = 16,
+    }
+    public enum TShape{
+        RECTANGLE, 
+        CIRCLE,
+        TRIANGLE,
+    }
 }

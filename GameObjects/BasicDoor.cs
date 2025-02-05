@@ -12,174 +12,139 @@ using Alakoz.Collision;
 namespace Alakoz.GameObjects
 {
     // A representation of a Door
-
     public class BasicDoor : Door
     {
-        // --------------------------------------------------- CONSTRUCTOR ---------------------------------------------------
-        public BasicDoor( Vector2 newPosition, float newWidth, float newHeight, int newID, int newTargetID, Dictionary<StateType, Animation> newAnimations)
+        #region // ========== CONSTRUCTOR ========== // 
+        public BasicDoor( Vector2 newPosition, float newWidth, float newHeight, int newid, int newTargetid, Dictionary<TState, Animation> newAnimations)
         {
-             // Dimensions
+            id = newid;
+            type = TObject.BASICDOOR;
+            targetID = newTargetid;
+
+            // Dimensions
             position = newPosition;
             width = newWidth;
             height = newHeight;
-            ID = newID;
-            targetID = newTargetID;
+            originOffset = new Vector2(newWidth/2, newHeight/2);
+			origin = position + originOffset;
 
             // Collision
             bounds = new Doorbox(this, new Vector2(position.X + 20, position.Y + 32), width - 40, height - 32); // Center the hurtbox
             activeCollisions.Add(bounds);
 
             // States
-            previousState = StateType.INACTIVE;
-			currentState = StateType.INACTIVE;
-            set_state(StateType.INACTIVE); // Default state 
+            previousState = TState.INACTIVE;
+			currentState = TState.OPEN;
 
             // Animations
             animations = newAnimations;
-            animManager = new AnimationManager(animations[StateType.INACTIVE]);
+            animManager = new AnimationManager(animations[TState.INACTIVE]);
             spriteCoordinate = new Vector2(0, 0);
 
-            currentAnimation = StateType.INACTIVE;
-            tempAnimation = StateType.CLOSE;
-            preAnimations = new ArrayList();
+            currAnimation = TState.INACTIVE;
+            nextAnimation = TState.CLOSE;
 
-            if (!allDoors.ContainsKey(ID)) allDoors.Add(ID, this);
+            if (!allDoors.ContainsKey(id)) allDoors.Add(id, this);
+        }
+        #endregion
+
+        #region // ========== SETTERS ========== //
+		public override void set_state(TState newState, TState newAnim = TState.NULL, params TState[] newPostAnim){
+			if (currentState == newState) return;
+			base.set_state(newState, newAnim, newPostAnim);
+            find_state(newState); // Call the corresponding state function
         }
 
-        // ========================================== STATE FUNCTIONS ==========================================
+		private void find_state(TState newState){
+            switch (newState)
+            {
+                case TState.ACTIVE:
+                    activeState();
+                    break;
+                case TState.INACTIVE:
+                    inactiveState();
+                    break;
+                case TState.OPEN:
+                    openState();
+                    break;
+                default:
+                    inactiveState();
+                    break;
+            }
+        }
+        
+		#endregion
+        
+        #region // ========== STATE FUNCTIONS ========== // 
 
+        #region // ----- Basic States
         /// When the target is not colliding with the door
         public void inactiveState()
         {
-            if (hovering) 
-            {
-                tempAnimation = StateType.CLOSE;
-				preAnimations = new ArrayList(){StateType.FADEOUT, StateType.UNLOCK};
-                set_preAnimations(); // Need to call it here since currentAnimation == StateType.Close == tempAnimation
-                
-                set_state(StateType.ACTIVE);
-                activeState();
-            }
-            else if (open)
-            {
-                tempAnimation = StateType.OPEN;
-                preAnimations = new ArrayList(){StateType.OPENSTART};
-                set_state(StateType.OPEN);
-                openState();
-            }
-            else
-            {
-                 if (stateFrame % 60 == 0 && stateFrame > 0) 
-                {
-                    preAnimations = new ArrayList(){StateType.IDLE};
-                    set_preAnimations();
-                }
-                tempAnimation = StateType.CLOSE;
+            if (hovering) set_state(TState.ACTIVE,  TState.UNLOCK, TState.FADEOUT, TState.CLOSE);
+            else if (open) set_state(TState.OPEN, TState.OPENSTART, TState.OPEN);
+            else {
+                if (stateFrame % 120 == 0 && stateFrame > 0) set_animations(TState.IDLE, TState.CLOSE);
             }
         }
        
         /// When the target is colliding with the door. The door becomes active and can be used by the target. 
         public void activeState()
         {
-            if (!hovering) 
-            {
-                tempAnimation = StateType.INACTIVE;
-                set_state(StateType.INACTIVE);
-                inactiveState();
-            }
-            else if (open)
-            {
-                tempAnimation = StateType.OPEN;
-                preAnimations = new ArrayList(){StateType.OPENSTART};
-                set_state(StateType.OPEN);
-                openState();
-            }
-            else 
-            {
-                tempAnimation = StateType.CLOSE;
-				if (stateFrame % 40 == 0 && stateFrame > 0) 
-                {
-                    preAnimations = new ArrayList(){StateType.FADEOUT, StateType.FADEIN};
-                    set_preAnimations();
-                }
+            if (!hovering) set_state(TState.INACTIVE, TState.NULL, TState.INACTIVE);
+            else if (open) set_state(TState.OPEN, TState.OPENSTART, TState.OPEN);
+            else {
+				if (stateFrame % 80 == 0 && stateFrame > 0) set_animations(TState.FADEIN, TState.FADEOUT, TState.CLOSE);
             }
         }
         
         /// When the target opens the door.
-        public void openState()
-        {
-            if (!open) 
-            {
-                // To make the door close when changing from open to inactive/active
-                if (!hovering) 
-                {
-                    tempAnimation = StateType.CLOSE;
-				    preAnimations = new ArrayList(){StateType.FADEOUT, StateType.CLOSESTART};
-                    set_state(StateType.INACTIVE);
-                    inactiveState();
-                }
-                else
-                {
-                    tempAnimation = StateType.ACTIVE;
-				    preAnimations = new ArrayList(){StateType.FADEOUT, StateType.CLOSESTART};
-                    set_state(StateType.ACTIVE);
-                    activeState();
-                }
-            }
-            else
-            {
-                tempAnimation = StateType.OPEN;
+        public void openState(){
+            if (!open) {
+                if (!hovering) set_state(TState.INACTIVE, TState.FADEOUT, TState.CLOSESTART, TState.CLOSE);
+                else set_state(TState.ACTIVE, TState.CLOSESTART, TState.FADEOUT, TState.CLOSE);
             }
         }
+        #endregion
 
-
-        // ------------------ Activation States ( invoked by another GameObject)
+        #region // ----- Interacting States
 
         /// State for when the door is "sending" a GameObject to another Door
-        public override void sendState(object sender, EventArgs args)
-        {
+        public override void sendState(object sender, EventArgs args){
+            
             // Some player variables that will need to be modified
             Player currPlayer = (Player) sender;
-            int playerFrame = currPlayer.stateFrame;
-
             currPlayer.velocity.X = 0;
-            currPlayer.tempAnimation = StateType.NONE;
-            currPlayer.preAnimations = new ArrayList(){StateType.DOORENTER};
+            
+            if (currPlayer.stateFrame == 1) currPlayer.set_animations(TState.DOORENTER, TState.NONE);
 
             // Need to set the state of the player to "INTERACT STATE"
-            if (playerFrame >= 40)
-            {
-                Send(currPlayer, targetID); // Send player to new door
-            }
+            if (currPlayer.stateFrame >= 100) Send(currPlayer, targetID); // Id taken from Tiled
         }
 
         /// State for when the door is "recieving" a GameObject that was sent from another Door
-        public override void receiveState(object sender, EventArgs args)
-        {
+        public override void receiveState(object sender, EventArgs args){
             // Some player variables that will need to be modified
             Player currPlayer = (Player) sender;
-            int playerFrame = currPlayer.stateFrame;
+            if (currPlayer.stateFrame == 1) currPlayer.set_animations(TState.NONE);
 
-            currPlayer.tempAnimation = StateType.IDLE;
-            currPlayer.preAnimations = new ArrayList(){};
-
-            if (playerFrame >= 40)
-            {
-                Receive(currPlayer); // Return control to the player
-            }
+            if (stateFrame == 12) currPlayer.set_animations(TState.DOORENTER, TState.IDLE);
+            if (currPlayer.stateFrame >= 100) Receive(currPlayer); // Return control to the player 
         }
+        #endregion
         
-        // ========================================== DOOR SPECIFIC FUNCTIONS ==========================================
+        #endregion
         
-        /// Take Control from the player and delegate it to the door with <doorID>
-        public override void Send(Player player, int doorID)
-        {
+        #region // ========== DOOR FUNCTIONS ========== // 
+        
+        /// Take Control from the player and delegate it to the door with <doorid>
+        public override void Send(Player player, int doorid){
             // Remove this Doors references to the Player
             player.interactFunction -= sendState;
-            player.stateFrame = 0;
+            player.stateFrame = 1;
 
             // Add the nextDoor's reference to the Player
-            Door nextDoor = allDoors[doorID];
+            Door nextDoor = allDoors[doorid];
             player.interactFunction += nextDoor.receiveState;
             nextDoor.open = true;
 
@@ -193,8 +158,7 @@ namespace Alakoz.GameObjects
         }
         
         /// Return control back to the Player
-        public override void Receive(Player player)
-        { 
+        public override void Receive(Player player){ 
             // Return control to the player
             player.beginInteract = false;
             player.interacting = false;
@@ -204,46 +168,21 @@ namespace Alakoz.GameObjects
             open = false;
         }
 
-
-        // ========================================== SETTERS ==========================================
-
-        /// Changes the players current state, setting it to <param name="newState"> while recording the previous state.
-        /// Also resets the stateFrame count.
-        public void set_state(StateType newState)
-        {
-			
-            if (currentState != newState)
-			{
-				previousState = currentState; 
-				stateFrame = 0;
-                currentState = newState;
-            }
-            
+        #endregion
+        
+        
+        #region // ========== UPDATING ========== // 
+        public override void update_time(){
+			animManager.Update();
+			base.update_time();
         }
-		
-        // Play a set of non looping animations. This functions keeps the base looping animations the same
-		public void set_preAnimations()
-		{
-			animManager.Clear(); // Empty the stack for new animations
-            
-			animManager.Add( animations[currentAnimation] ); // Add the current state animation to the bottom of the stack
 
-			for (int i = 0; i < preAnimations.Count; i++) // add the transitional animations
-			{ 
-				if (preAnimations.Count == 0) break;
-				animManager.Add( animations[ (StateType) preAnimations[i]] ); 
-			}
-			animManager.Play(); // Pop and play the animation at the top of the stack
-
-			preAnimations.Clear(); // Clear remaining pre-animations for next game tick
-		}
-        // --------------------------------------------------- UPDATING ---------------------------------------------------
         /// <summary>
         /// Sets the values that cause the Door to react
         /// </summary>
-        public override void update_input()
-        {
+        public override void update_input(){
             if (hovering) active = true;
+            else active = false;
         }
 
         /// <summary>
@@ -251,74 +190,29 @@ namespace Alakoz.GameObjects
         /// </summary>
         public override void update_state()
         {
-            switch (currentState)
-            {
-                case StateType.ACTIVE:
-                    set_state(StateType.ACTIVE);
-                    activeState();
-                    break;
-                case StateType.INACTIVE:
-                    set_state(StateType.INACTIVE);
-                    inactiveState();
-                    break;
-                case StateType.OPEN:
-                    set_state(StateType.OPEN);
-                    openState();
-                    break;
-            }
+            find_state(currentState);
+            hovering = false;
         }
-
-        /// <summary>
-        /// Update the animations to be played depending on the state
-        /// </summary>
-        public override void update_animations()
-        {
-            // Set the main animation to play
-
-			if (currentAnimation != tempAnimation) 
-			{
-				previousAnimation = currentAnimation;
-				currentAnimation = tempAnimation;
-				set_preAnimations();
-			}
-            	
-        }
-
-        /// <summary>
-        /// Update the doors physics 
-        /// </summary>
         public override void update_physics()
         {
 
         }
+        #endregion
 
-        /// <summary>
-        /// Update the timer associated with the door
-        /// </summary>s
-        public override void update_time(GameTime gameTime)
-        {
-            stateTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (stateTimer >= FPS24)
-            {
-                stateTimer = FPS24 - stateTimer;
-                stateFrame++;
-            }
-			if (stateFrame >= 999) stateFrame = 0;
-        }
-        public void Update(GameTime gameTime)
-        {
-
-        }
-
-        // --------------------------------------------------- DRAWING ---------------------------------------------------
+        #region // ========== DRAWING ========== // 
         public override void Draw(GameTime gameTime, SpriteBatch spriteBatch)
         {
-            
-            animManager.Draw(gameTime, spriteBatch, position + spriteCoordinate, Vector2.One, flip); // Draw the Door
-            
+            // Pause current frame if hit
+			if (hitStop > 0) animManager.Pause();
+			else animManager.Resume();
+			
+			// Draw player animation
+			Vector2 drawPos = position; 
+			// Vector2 drawPos = Vector2.Lerp(prevPosition, position, Game1.thisGame.frameProgress); 
+			animManager.Draw(gameTime, spriteBatch, drawPos + spriteCoordinate, Vector2.One, flip);
+
             // bounds.Draw(spriteBatch, flip); // Draw the collision bounds
-            
-            // drawDebug(spriteBatch); 
+            drawDebug(spriteBatch);
         }
 
         public void drawDebug(SpriteBatch spriteBatch)
@@ -334,11 +228,13 @@ namespace Alakoz.GameObjects
 			string stateMSG = "Current State: " + currentState 
 			+ "\nPrevious State: " + previousState
             + "\nFrame: " + stateFrame
-            + "\nCurrent Animation: " + currentAnimation;
+            + "\nAnimation: " + currAnimation;
 
             spriteBatch.DrawString(stateFONT, stateMSG, new Vector2(width, -50) + position, Color.DeepPink, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
             spriteBatch.DrawString(stateFONT, physicsMSG, new Vector2(-80, -50) + position, Color.GreenYellow, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
             spriteBatch.DrawString(stateFONT, inputMSG, new Vector2(-80, 0) + position, Color.Orange, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
         }
+        #endregion
     }
-}
+
+   }

@@ -23,7 +23,6 @@ namespace Alakoz.GameObjects
         public Vector2 endPosition;
         public float width;
         public float height;
-        public int ID;
 
         // ------ COLLISION ------- //
         public bool hovering = false;
@@ -33,25 +32,11 @@ namespace Alakoz.GameObjects
         public Doorbox bounds;
 
         // ------ ANIMATION ------ //
-		public Dictionary<StateType, Animation> animations;
-		public StateType currentAnimation;
-		public StateType previousAnimation;
-		public StateType tempAnimation;
-		public ArrayList preAnimations;
         public Vector2 spriteCoordinate; // Placement of sprite in relation to the hurtbox. Calculated with aesprite
 
 
         // ------ EFFECTS ------ //
 		public SpriteEffects flip;
-
-        // ------ STATES ------ //
-        public StateType currentState;
-		public StateType previousState;
-        public int stateFrame; 		
-        public float stateTimer;
-
-        // ----- OTHER ----- //
-        public SpriteFont stateFONT { get; set; }
 
         // ========================================== LOADING ==========================================
         public static void LoadDoors(){allDoors = new Dictionary<int, Door>();}

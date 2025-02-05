@@ -16,28 +16,75 @@ namespace Alakoz.GameObjects
 {
     public abstract class GameObject
     {
-        public GameObjectType type = GameObjectType.NONE;
+        #region // ----- Physics Variables ----- //
+        public int id = -1;
+        public TObject type = TObject.NULL;
         public Vector2 position;
-        public Vector2 velocity;
+        public Vector2 prevPosition;
+		public Vector2 nextPosition;
+
+		public int direction = 1;
+        public Vector2 velocity = Vector2.Zero;
         public Vector2 origin;
         public Vector2 originOffset;
-        
-        // ------ COLLISION ------ //
+        #endregion
+
+        #region // ----- Animation Variables ----- //
+        public Dictionary<TState, Animation> animations;
+		public TState currAnimation = TState.NULL;
+		public TState prevAnimation = TState.NULL;
+		public TState nextAnimation = TState.NULL;
+        public TState[] postAnimation = Array.Empty<TState>();
+        public AnimationManager animManager;
+        #endregion
+
+        #region // ----- Collision Variables ----- //
 		public List<CollisionObject> activeCollisions = new List<CollisionObject>();
         public int hitStop = 0; // Number of frames to "pause" the state timer.
-        public bool applyKB = false;
-
+        public bool applyKB = false; // To make the object fall
         public bool applyAttackBounce = false; // For air attacks. When a hit lands the object bounce/not fall
+        public Vector2 KB; // The knockback from the hitbox that interescts the player
 
-        // ------ ANIMATION ----- //
-        public AnimationManager animManager;
-        public float FPS24 = AnimationManager.FPS24;
+		public float hurtboxWidth = 1; // Default values. DONT CHANGE
+		public float hurtboxHeight = 1; // Default values, DONT CHANGE
+        #endregion
 
-        // ========================================== ABSTRACT METHODS ==========================================
+        #region // ----- State Variables ----- //
+		public SpriteFont stateFONT { get; set; }
+		public int stateFrame = 0; // Frame for the current state
+		public TState currentState;
+		public TState previousState;
+        #endregion
+        
+        #region // ==================== SETTERS ==================== //
+		public void set_animations(TState next = TState.NULL, params TState[] post){
+			if (next != TState.NULL) nextAnimation = next;
+			if (post.Length != 0 ) postAnimation = post;
+		}
+
+		public virtual void set_state(TState newState, TState newAnim = TState.NULL, params TState[] newPostAnim){
+            if (currentState == newState) return;
+
+            previousState = currentState;
+            currentState = newState;
+            stateFrame = 1;
+			set_animations(
+				newAnim != TState.NULL? newAnim : nextAnimation,
+				newPostAnim.Length != 0? newPostAnim : Array.Empty<TState>()
+			);
+        }
+        #endregion
+
+        #region // ==================== UPDATING ==================== //
         /// <summary>
         /// Update the time associated with the GameObject
         /// </summary>
-        public abstract void update_time(GameTime gameTime);
+        public virtual void update_time(){
+            if (hitStop <= 0 )stateFrame++;
+			else hitStop--;
+				
+			if (stateFrame > 9999) stateFrame = 1;
+        }
         
         
         public abstract void update_input();
@@ -55,14 +102,31 @@ namespace Alakoz.GameObjects
         /// <summary>
         /// Update the animations to be played depending on the state
         /// </summary>
-        public abstract void update_animations();
+        // Updating the current animation to be played
+		public virtual void update_animations(){
+            if (currAnimation != nextAnimation && nextAnimation != TState.NULL){
+            	prevAnimation = currAnimation;
 
+				// Create a copy and map each animation name to the animation
+				Animation[] postAnimationList = ((TState[])postAnimation.Clone()).ToList().ConvertAll(name => animations[name]).ToArray();
+				Array.Reverse(postAnimationList);
+				
+                if (postAnimation.Length == 0) animManager.Play(animations[nextAnimation]);
+                else  animManager.Play(animations[nextAnimation], postAnimationList);
+                postAnimation = Array.Empty<TState>(); // reset postAnimation  
+            }
+            currAnimation = animManager.getName();
+            nextAnimation = TState.NULL; // reset nextAnimation  
+        }
+        
         // public abstract void Update();
+        #endregion
 
-        // ========================================== DRAWING  ==========================================
+        #region // ==================== DRAWING ==================== //
         public abstract void Draw(GameTime gameTime, SpriteBatch spriteBatch);
-
-        // ========================================== COMPUTATIONS ==========================================
+        #endregion
+        
+        #region // ========== COMPUTATIONS ========== //
         /// <summary>
         /// Approaches <end> starting from <start> by an amount specified by <shift>.
         /// Returns the amount to move by. 
@@ -137,19 +201,21 @@ namespace Alakoz.GameObjects
         {
             return ((1 - percent) * p0) + (percent * p1); // L(t) = (1 - t)p0 + (t)p1
         }
+        #endregion
     }
+    
 
     // ############################################################################################################################################
     // // #################################################   GAME OBJECT ASSETS   ################################################################
     // ############################################################################################################################################
-    public interface GameObjectAsset
+    public interface GameAsset
     {
         // ========================================== References ==========================================
         public static ContentManager Content = Game1.thisGame.Content;
-        public static Dictionary<StateType, Animation> PlayerAnimations {get; set;}
-        public static Dictionary<StateType, Animation> EnemyAnimations {get; set;}
-        public static Dictionary<StateType, Animation> DoorAnimations {get; set;}
-        public static Dictionary<CollisionType, Animation> CollisionAnimations {get; set;}
+        public static Dictionary<TState, Animation> PlayerAnimations {get; set;}
+        public static Dictionary<TState, Animation> EnemyAnimations {get; set;}
+        public static Dictionary<TState, Animation> DoorAnimations {get; set;}
+        public static Dictionary<TCollision, Animation> CollisionAnimations {get; set;}
 
         // ========================================== LOADING ==========================================
         // ---------- Species ---------- //
@@ -158,102 +224,66 @@ namespace Alakoz.GameObjects
             string playerDirectory = "Alakoz Content/Species/Player/Rebel_Animations/"; 
             string enemyDirectory = "Alakoz Content/Species/Player/Base_Animations/";
 
-            Animation Symbol = new Animation(Content.Load<Texture2D>( enemyDirectory + "ball"), 1);
-            Animation None = new Animation(Content.Load<Texture2D>( playerDirectory + "Rebel_None"), 1);
+            Animation[] animations = new Animation[]{
+                new Animation( TState.SYMBOL, Content.Load<Texture2D>( enemyDirectory + "ball"), 1),
+                new Animation( TState.NULL, Content.Load<Texture2D>( playerDirectory + "Rebel_None"), 1),
+                new Animation( TState.NONE, Content.Load<Texture2D>( playerDirectory + "Rebel_None"), 1),
+                // ----- Idle
+                new Animation( TState.IDLE, Content.Load<Texture2D>(playerDirectory + "Rebel_Idle"), frames:40),
+                // ----- Run
+                new Animation( TState.RUNSTART, Content.Load<Texture2D>(playerDirectory + "Rebel_RunStart"), 10, false),
+                new Animation( TState.RUN, Content.Load<Texture2D>(playerDirectory + "Rebel_Run"), 20),
+                new Animation( TState.RUNEND, Content.Load<Texture2D>(playerDirectory + "Rebel_Runstop"), 21, false),
+                // ----- Jump
+                new Animation( TState.JUMPSTART, Content.Load<Texture2D>(playerDirectory + "Rebel_JumpStart"), 8, false),
+                new Animation( TState.JUMP, Content.Load<Texture2D>(playerDirectory + "Rebel_Jump"), 12),
+                new Animation( TState.FALL, Content.Load<Texture2D>(playerDirectory + "Rebel_Fall"), 12),
+                // ----- Crouch
+                new Animation( TState.CROUCHSTART, Content.Load<Texture2D>(playerDirectory + "Rebel_CrouchStart"), 4, false),
+                new Animation( TState.CROUCH, Content.Load<Texture2D>(playerDirectory + "Rebel_Crouch"), 24),
+                new Animation( TState.CROUCHEND, Content.Load<Texture2D>(playerDirectory + "Rebel_CrouchEnd"), 6),       
+                // ----- Dash
+                new Animation( TState.DASHSTART, Content.Load<Texture2D>(playerDirectory + "Rebel_DashStart"), 6, false),
+                new Animation( TState.DASH, Content.Load<Texture2D>(playerDirectory + "Rebel_Dash"), 12),
+                new Animation( TState.DASHEND, Content.Load<Texture2D>(playerDirectory + "Rebel_DashEnd"), 13, false), 
+                // ----- Walljump
+                new Animation( TState.WALLCLING, Content.Load<Texture2D>(playerDirectory + "Rebel_WallCling"), 20),
+                new Animation( TState.WALLJUMPSTART, Content.Load<Texture2D>(playerDirectory + "Rebel_WallJumpStart"), 1), 
+                new Animation( TState.WALLJUMP, Content.Load<Texture2D>(playerDirectory + "Rebel_WallJump"), 20, false),      
+                // ----- Ball
+                new Animation( TState.BALLSTART, Content.Load<Texture2D>(playerDirectory + "Rebel_BallStart"), 4, false),
+                new Animation( TState.BALL, Content.Load<Texture2D>(playerDirectory + "Rebel_Ball"), 12),
+                new Animation( TState.BALLEND, Content.Load<Texture2D>(playerDirectory + "Rebel_BallEnd"), 2, false),
+                // ----- Attacks
+                new Animation( TState.BASICATTACK1, Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack1"), 20, false),
+                new Animation( TState.BASICATTACK2, Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack2"), 22, false),
+                new Animation( TState.BASICATTACK3, Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack3"), 23, false),
+                new Animation( TState.BASICATTACK4, Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack4"), 23 , false),
+                // ----- Air Attacks
+                new Animation( TState.AIRATTACK1, Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack1"), 20, false),
+                new Animation( TState.AIRATTACK2, Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack2"), 22, false),
+                new Animation( TState.AIRATTACK3, Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack3"), 23, false),
+                // ----- Finishers
+                new Animation( TState.FRONTFINISHER, Content.Load<Texture2D>(playerDirectory + "Rebel_FinisherFront"), 39, false),
+                new Animation( TState.BACKFINISHER, Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack1"), 20, false),
+                new Animation( TState.UPFINISHER, Content.Load<Texture2D>(playerDirectory + "Rebel_FinisherUp"), 39, false),
 
-            Animation idle = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Idle"), 40);
-            
-            Animation runStart = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_RunStart"), 10, false);
-            Animation run = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Run"), 20);
-            Animation runEnd = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Runstop"), 21, false);
-            
-            Animation jumpStart = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_JumpStart"), 8, false);
-            Animation jump = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Jump"), 12);
-            Animation falling = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Fall"), 12);
-            
-            Animation crouchStart = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_CrouchStart"), 4, false);
-            Animation crouch = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Crouch"), 24);
-            Animation crouchEnd = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_CrouchEnd"), 6);       
-            
-            Animation dashStart = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_DashStart"), 6, false);
-            Animation dash = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Dash"), 12);
-            Animation dashEnd = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_DashEnd"), 14, false, 0.012f); 
-
-            Animation wallCling = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_WallCling"), 20);
-            Animation walljumpStart = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_WallJumpStart"), 1); 
-            Animation walljump = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_WallJump"), 20, false);      
-
-            Animation ballStart = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BallStart"), 4, false);
-            Animation ball = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Ball"), 12, true, 0.012f);
-            Animation ballEnd = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BallEnd"), 2, false);
-
-            Animation basicAttack1 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack1"), 20, false);
-            Animation basicAttack2 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack2"), 22, false);
-            Animation basicAttack3 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack3"), 23, false);
-            Animation basicAttack4 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack4"), 23, false);
-
-            Animation airAttack1 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack1"), 20, false);
-            Animation airAttack2 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack2"), 22, false);
-            Animation airAttack3 = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_BasicAttack3"), 23, false);
-
-            Animation teleportToGround = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_TeleportToGround"), 14, false);
-            Animation teleportToAir = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_TeleportToAir"), 4, false);
-
-
-            Animation hitStart = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_HitStart"), 8, false);
-            Animation hit = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Hit"), 16);
-
-            Animation doorEnter = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_DoorEnter"), 34, false);
-
-            PlayerAnimations = new Dictionary<StateType, Animation>
-            {
-                { StateType.SYMBOL, Symbol },
-                { StateType.NONE, None },
-                { StateType.IDLE, idle },
-                // Run
-                { StateType.RUN, run },
-                { StateType.RUNSTART, runStart },
-                { StateType.RUNEND, runEnd },
-                // Jump and Fall
-                { StateType.JUMPSTART, jumpStart },
-                { StateType.JUMP, jump },
-                { StateType.FALL, falling },
-                // Crouch
-                { StateType.CROUCH, crouch },
-                { StateType.CROUCHSTART, crouchStart },
-                { StateType.CROUCHEND, crouchEnd },
-                // Walljump
-                { StateType.WALLCLING, wallCling },
-                { StateType.WALLJUMPSTART, walljumpStart },
-                { StateType.WALLJUMP, walljump },
-                // Dash
-                { StateType.DASH, dash },
-                { StateType.DASHSTART, dashStart },
-                { StateType.DASHEND, dashEnd },
-                
-
-                // Attacking
-                { StateType.BASICATTACK1, basicAttack1 },
-                { StateType.BASICATTACK2, basicAttack2 },
-                { StateType.BASICATTACK3, basicAttack3 },
-                { StateType.BASICATTACK4, basicAttack4 },
-
-                { StateType.AIRATTACK1, airAttack1 },
-                { StateType.AIRATTACK2, airAttack2 },
-                { StateType.AIRATTACK3, airAttack3 },
-
-                // Damaged
-                { StateType.HIT, hit },
-                { StateType.HITSTART, hitStart },
-                { StateType.DOORENTER, doorEnter },
-
-                // Misc
-                { StateType.TOGROUND, teleportToGround },
-                { StateType.TOAIR, teleportToAir},
-                { StateType.BALL, ball },
-                { StateType.BALLSTART, ballStart },
-                { StateType.BALLEND, ballEnd },
+                new Animation( TState.DOWNFINISHER, Content.Load<Texture2D>(playerDirectory + "Rebel_FinisherDown"), 42, false, rows:7, columns:6),
+                new Animation( TState.DOWNFINISHERSTART, Content.Load<Texture2D>(playerDirectory + "Rebel_FinisherDownStart"), 6, false),
+                new Animation( TState.DOWNFINISHEREND, Content.Load<Texture2D>(playerDirectory + "Rebel_FinisherDownEnd"), 10, false),
+                new Animation( TState.DOWNFINISHERGROUND, Content.Load<Texture2D>(playerDirectory + "Rebel_FinisherDownGround"), 14, false),
+                // ----- Other
+                new Animation( TState.TOGROUND, Content.Load<Texture2D>(playerDirectory + "Rebel_TeleportToGround"), 14, false),
+                new Animation( TState.TOAIR, Content.Load<Texture2D>(playerDirectory + "Rebel_TeleportToAir"), 4, false),
+                // ----- Hit
+                new Animation( TState.HITSTART, Content.Load<Texture2D>(playerDirectory + "Rebel_HitStart"), 8, false),
+                new Animation( TState.HIT, Content.Load<Texture2D>(playerDirectory + "Rebel_Hit"), 16),
+                // ----- Interaction
+                new Animation( TState.DOORENTER, Content.Load<Texture2D>(playerDirectory + "Rebel_DoorEnter"), 34, false)
             };
+
+            PlayerAnimations = new Dictionary<TState, Animation>{};
+            foreach(Animation animation in animations){ PlayerAnimations.Add(animation.Name, animation );};
         }
 
         public static void LoadEnemyAssets()
@@ -262,53 +292,22 @@ namespace Alakoz.GameObjects
             string effectDirectory = "Alakoz Content/Effects/General/";
             string playerDirectory = "Alakoz Content/Species/Player/Rebel_Animations/";
 
-            
-            Animation Symbol = new Animation(Content.Load<Texture2D>( enemyDirectory + "ball"), 1);
-            Animation SymbolNonLooping = new Animation(Content.Load<Texture2D>( enemyDirectory + "ball"), 1, false);
-            Animation playerHurtbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
-            Animation playerHitbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
-
-            Animation idle = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Idle"), 32);
-            Animation idle2 = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Idle2"), 8);
-            Animation run = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Running"), 22);
-            Animation runEnd = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_RunStop"), 24, false);
-            Animation turnaround = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Turnaround"), 12);
-            Animation jump = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Jump"), 10, false);
-            Animation falling = new Animation(Content.Load<Texture2D>( enemyDirectory + "Base_Falling"), 12);
-
-            Animation hitStart = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_HitStart"), 8, false);
-            Animation hit = new Animation(Content.Load<Texture2D>(playerDirectory + "Rebel_Hit"), 16);
-
-            EnemyAnimations = new Dictionary<StateType, Animation>
-            {
-                { StateType.SYMBOL, Symbol },
-                { StateType.NONE, Symbol },
-                { StateType.HURTBOX, playerHurtbox },
-                { StateType.HITBOX, playerHitbox },
-                { StateType.IDLE, idle }, // Idle
-                // Running
-                { StateType.RUN, run }, 
-                { StateType.RUNEND, runEnd },
-                // Jumping 
-                { StateType.JUMPSTART, Symbol },
-                { StateType.JUMP, jump }, 
-                { StateType.FALL, falling },
-
-                { StateType.CROUCH, Symbol }, // Crouching
-                { StateType.CROUCHSTART, SymbolNonLooping },
-                { StateType.CROUCHEND, SymbolNonLooping },
-
-                { StateType.DASH, Symbol }, // Dashing
-                { StateType.DASHSTART, SymbolNonLooping },
-                { StateType.DASHEND, SymbolNonLooping },
-
-                { StateType.BALL, Symbol }, // Ball Spin
-                { StateType.BALLSTART, SymbolNonLooping },
-                { StateType.BALLEND, SymbolNonLooping },
-                
-                { StateType.HIT, hit }, // Hit
-                { StateType.HITSTART, hitStart }
+            Animation[] animations = new Animation[]{
+                new Animation(TState.NULL, Content.Load<Texture2D>( enemyDirectory + "ball"), 1),
+                new Animation(TState.HURTBOX, Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1),
+                new Animation(TState.HITBOX, Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1),
+                new Animation(TState.IDLE, Content.Load<Texture2D>( enemyDirectory + "Base_Idle"), 32),
+                // new Animation(TState.NONE, Content.Load<Texture2D>( enemyDirectory + "Base_Idle2"), 8),
+                new Animation(TState.RUN, Content.Load<Texture2D>( enemyDirectory + "Base_Running"), 22),
+                new Animation(TState.RUNEND, Content.Load<Texture2D>( enemyDirectory + "Base_RunStop"), 24, false),
+                new Animation(TState.NONE, Content.Load<Texture2D>( enemyDirectory + "Base_Turnaround"), 12),
+                new Animation(TState.JUMP, Content.Load<Texture2D>( enemyDirectory + "Base_Jump"), 10, false),
+                new Animation(TState.FALL, Content.Load<Texture2D>( enemyDirectory + "Base_Falling"), 12),
+                new Animation(TState.HITSTART, Content.Load<Texture2D>(playerDirectory + "Rebel_HitStart"), 8, false),
+                new Animation(TState.HIT, Content.Load<Texture2D>(playerDirectory + "Rebel_Hit"), 16)
             };
+            EnemyAnimations = new Dictionary<TState, Animation>{};
+            foreach(Animation animation in animations){ EnemyAnimations.Add(animation.Name, animation );}; 
         }
 
         // ---------- Map Objects---------- //
@@ -318,36 +317,36 @@ namespace Alakoz.GameObjects
 
             string doorDirectory = "Alakoz Content/Maps/MapObjects/Doors/Door - Small/";
             string effectDirectory = "Alakoz Content/Effects/General/";
-            Animation Hurtbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
-            Animation Hitbox = new Animation(Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
+            Animation Hurtbox = new Animation(TState.NULL, Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
+            Animation Hitbox = new Animation(TState.NULL, Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
 
-            Animation open = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_Open"), 1);                
-            Animation openStart = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_OpenStart"), 9, false);
+            Animation open = new Animation(TState.NULL, Content.Load<Texture2D>(doorDirectory + "SmallDoor_Open"), 1);                
+            Animation openStart = new Animation(TState.NULL, Content.Load<Texture2D>(doorDirectory + "SmallDoor_OpenStart"), 9, false);
             
-            Animation close = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_Close"), 1);
-            Animation closeStart = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_CloseStart"), 10, false);
+            Animation close = new Animation(TState.NULL, Content.Load<Texture2D>(doorDirectory + "SmallDoor_Close"), 1);
+            Animation closeStart = new Animation(TState.NULL, Content.Load<Texture2D>(doorDirectory + "SmallDoor_CloseStart"), 10, false);
             
-            Animation idle = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_Idle"), 38, false);
-            Animation unlock = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_Unlock"), 30, false);
-            Animation fadeIn = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_FadeIn"), 11, false);
-            Animation fadeOut = new Animation(Content.Load<Texture2D>(doorDirectory + "SmallDoor_FadeOut"), 10, false);
+            Animation idle = new Animation(TState.NULL, Content.Load<Texture2D>(doorDirectory + "SmallDoor_Idle"), 38, false);
+            Animation unlock = new Animation(TState.NULL, Content.Load<Texture2D>(doorDirectory + "SmallDoor_Unlock"), 30, false);
+            Animation fadeIn = new Animation(TState.NULL, Content.Load<Texture2D>(doorDirectory + "SmallDoor_FadeIn"), 11, false);
+            Animation fadeOut = new Animation(TState.NULL, Content.Load<Texture2D>(doorDirectory + "SmallDoor_FadeOut"), 10, false);
 
             // Animations for the Door
-            DoorAnimations = new Dictionary<StateType, Animation>
+            DoorAnimations = new Dictionary<TState, Animation>
             {
-                {StateType.ACTIVE, Hitbox},
-                {StateType.ACTIVESTART, Hitbox},
-                {StateType.INACTIVE, Hurtbox}, 
-                {StateType.INACTIVESTART, Hurtbox},
+                {TState.ACTIVE, Hitbox},
+                {TState.ACTIVESTART, Hitbox},
+                {TState.INACTIVE, Hurtbox}, 
+                {TState.INACTIVESTART, Hurtbox},
 
-                {StateType.OPEN, open},
-                {StateType.OPENSTART, openStart},
-                {StateType.CLOSE, close},
-                {StateType.CLOSESTART, closeStart},
-                {StateType.IDLE, idle},
-                {StateType.UNLOCK, unlock},
-                {StateType.FADEIN, fadeIn},
-                {StateType.FADEOUT, fadeOut},
+                {TState.OPEN, open},
+                {TState.OPENSTART, openStart},
+                {TState.CLOSE, close},
+                {TState.CLOSESTART, closeStart},
+                {TState.IDLE, idle},
+                {TState.UNLOCK, unlock},
+                {TState.FADEIN, fadeIn},
+                {TState.FADEOUT, fadeOut},
             };
         }
 
@@ -359,21 +358,16 @@ namespace Alakoz.GameObjects
         {
             string effectDirectory = "Alakoz Content/Effects/General/";
             
-            Animation hurtboxSprite = new Animation(Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
-            Animation hitboxSprite = new Animation(Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
+            Animation hurtboxSprite = new Animation(TState.NULL, Content.Load<Texture2D>( effectDirectory + "Hurtbox"), 1);
+            Animation hitboxSprite = new Animation(TState.NULL, Content.Load<Texture2D>( effectDirectory + "Hitbox"), 1);
 
-            CollisionAnimations = new Dictionary<CollisionType, Animation>
+            CollisionAnimations = new Dictionary<TCollision, Animation>
             {
-                { CollisionType.HURTBOX, hurtboxSprite },
-                { CollisionType.ENEMYHURTBOX, hurtboxSprite },
-                { CollisionType.HITBOX, hitboxSprite }
+                { TCollision.HURTBOX, hurtboxSprite },
+                { TCollision.ENEMYHURTBOX, hurtboxSprite },
+                { TCollision.HITBOX, hitboxSprite }
             };
         }
     }
-    
-    
-    // Functions to load different GameObjects and retrieve their Assests
-
-
 
 }
