@@ -2,7 +2,6 @@
 *.dll
 *.xnb
 *.sln
-obj
-bin/Debug/net6.0/
-# !bin/Debug/net6.0/Content/Alakoz Content/Maps/TestMaps
+obj/
+bin/
 Content/bin/DesktopGL
