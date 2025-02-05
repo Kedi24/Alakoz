@@ -73,8 +73,8 @@ namespace Alakoz.GameObjects
 		public AnimationManager animManager;
 
 		// ------ STATES ------- //
-		public StateType currentState;
-		public StateType previousState;
+		public TState currentState;
+		public TState previousState;
 		// ========================================== UPDATING ==========================================
         // public abstract void Update();
 

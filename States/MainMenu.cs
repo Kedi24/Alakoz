@@ -16,14 +16,14 @@ using Microsoft.Xna.Framework.Content;
 using System.Diagnostics;
 
 namespace Alakoz;
-public class MainMenu : GameStates
+public class MainMenu : GameState
 {
     public static TestLevel thisGame;
     private GraphicsDeviceManager _graphics;
     public GraphicsDevice graphicsDevice;
     public ContentManager Content;
     public GameWindow window;
-    public GameStates nextState;
+    public GameState nextState;
     public static int WindowWidth;
     public static int WindowHeight;
     Texture2D Background;
@@ -51,15 +51,26 @@ public class MainMenu : GameStates
         KeyboardState keyboardState = Keyboard.GetState();
 
         if (keyboardState.IsKeyDown(Keys.V)) {
-            Game1.currState = Game1.testlvl;
-            Game1.currState.Initialize();
-            Game1.currState.LoadContent();
+            Game1.setGameState(Game1.testlvl);
         }
     }
     public override void Draw(SpriteBatch spriteBatch,GameTime gameTime) 
     {
         spriteBatch.Begin(samplerState: SamplerState.PointClamp);
         spriteBatch.Draw(Background, new Rectangle(-100, -100, 1600, 1000), Color.White);
+
+        // Draw opening message
+        spriteBatch.DrawString(
+            spriteFont: Game1.FONT, 
+            text: "PRESS V TO BEGIN",
+            position: new Vector2(400, 300),
+            color: Color.DarkRed, 
+            rotation: 0f,
+            origin: Vector2.Zero,
+            scale: 2f,
+            effects: SpriteEffects.None,
+            layerDepth: 1f);
+
         spriteBatch.End();
     }
 

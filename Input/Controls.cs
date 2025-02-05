@@ -79,8 +79,7 @@ namespace Alakoz.Input
 				return true;
 			}	
 		}
-		public void altControls()
-		{
+		public void altControls(){
 			Left = Keys.J;
             Right = Keys.L;
             Up = Keys.U;
@@ -91,6 +90,18 @@ namespace Alakoz.Input
             Attack = Keys.Y;
             Skill = Keys.G;
 			Interact = Keys.O;
+		}
+		public void keyboardControls(){
+			Left = Keys.A;
+            Right = Keys.D;
+            Up = Keys.W;
+            Down = Keys.S;
+			Crouch = Keys.S;
+            Jump = Keys.I;
+            Dash = Keys.L;
+            Attack = Keys.J;
+			Interact = Keys.K;
+            Skill = Keys.LeftShift;
 		}
     }
 }

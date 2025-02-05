@@ -1,0 +1,7 @@
+*.DS_Store
+*.dll
+*.xnb
+*.sln
+obj/
+bin/
+Content/bin/DesktopGL

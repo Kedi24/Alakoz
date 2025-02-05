@@ -15,65 +15,56 @@ namespace Alakoz.Collision
     public class Doorbox : CollisionObject
     {
         public Door owner;
-        
-        // ----- DIMENSIONS ----- //
         public Vector2 sendPosition;
         public Vector2 scale {get; set;}
         public Vector2 offset {get; set;}
 
-        // --------------------------------------------------- CONSTRUCTOR ---------------------------------------------------
         public Doorbox(Door newOwner, Vector2 newPosition, float newWidth, float newHeight)
         {
-            type = CollisionType.DOOR;
+            type = TCollision.DOOR;
             owner = newOwner;
             position = newPosition;
             width = newWidth;
             height = newHeight;
             sendPosition = newOwner.endPosition;
 
-            sprite = CollisionSprites[CollisionType.HURTBOX];
-            scale = new Vector2((newWidth / sprite.frameWidth), (newHeight / sprite.frameHeight));
+            sprite = CollisionSprites[TCollision.HURTBOX];
+            scale = new Vector2(newWidth / sprite.Width, newHeight / sprite.Height);
         }
-        // --------------------------------------------------- GENERAL ---------------------------------------------------
-        /// <summary>
-        /// The types of collision the Door can interact with. Parse <paramref name="currObject"/> to see if 
-        /// it can interact with the Door.
-        /// </summary>
-        public override void OnCollision(CollisionObject currObject)
+
+        public override bool OnCollision(CollisionObject currObject)
         {
             switch (currObject.type)
             {
-                case CollisionType.HURTBOX:
-                    hurtboxCollision((Hurtbox)currObject);
-                    break;
+                case TCollision.HURTBOX:
+                    return hurtboxCollision((Hurtbox)currObject);
+                default:
+                    return false;
             }
         }
-        public void Draw(SpriteBatch spriteBatch, SpriteEffects spriteEffects)
-        {
-            base.Draw(spriteBatch, SpriteEffects.None, Color.White, position, width, height);
-        }
-
-
-        // --------------------------------------------------- COLLISION ---------------------------------------------------
-        public override void groundCollision(Ground currObject)
+        
+        #region // ========== Collisions ========== // 
+        public override bool groundCollision(Ground currObject)
         {
             throw new NotImplementedException();
         }
 
-        public override void hitboxCollision(Hitbox currObject)
+        public bool hurtboxCollision(Hurtbox currObject)
+        {
+            bool collision = CollisionShape.isOutside(      
+                owner.position.X, owner.position.Y, owner.width, owner.height, "Rectangle",
+                currObject.position.X, currObject.position.Y, currObject.width, currObject.height, "Rectangle"
+            );
+            owner.hovering = collision;
+            // else owner.hovering = false;
+
+            return collision;
+        }
+
+        public override bool platformCollision(Platform currObject)
         {
             throw new NotImplementedException();
         }
-
-        public override void hurtboxCollision(Hurtbox currObject)
-        {
-            if (getBounds().isInside(currObject.getBounds())) owner.hovering = true;
-            else owner.hovering = false;
-        }
-
-        public override void platformCollision(Platform currObject)
-        {
-            throw new NotImplementedException();
-        }
+        #endregion
     }
 }
