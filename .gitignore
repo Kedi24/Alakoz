@@ -1,20 +1,8 @@
 *.DS_Store
 *.dll
 *.xnb
-obj
 *.sln
+obj
 bin/Debug/net6.0/
 # !bin/Debug/net6.0/Content/Alakoz Content/Maps/TestMaps
 Content/bin/DesktopGL
-obj
-
-obj/Alakoz.csproj.nuget.dgspec.json
-obj/Alakoz.csproj.nuget.g.props
-obj/Alakoz.csproj.nuget.g.targets
-obj/project.assets.json
-obj/project.nuget.cache
-obj/Debug/net6.0/Alakoz.AssemblyInfo.cs
-obj/Debug/net6.0/Alakoz.AssemblyInfoInputs.cache
-obj/Debug/net6.0/Alakoz.assets.cache
-obj/Debug/net6.0/Alakoz.csproj.AssemblyReference.cache
-obj/Debug/net6.0/Alakoz.GeneratedMSBuildEditorConfig.editorconfig
